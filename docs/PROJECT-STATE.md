@@ -33,7 +33,7 @@
 |-------|-------|
 | ZIP | `release/local-coding-tools-mcp-v0.7.0-customer.zip` |
 | SHA256 (Phase 1.3 reference) | `B3E644A78CFA1D914977A09AA6FDF5F8E8146F4BCCB88062776DB1E9ED3E43D5` |
-| SHA256 (current `SHA256SUMS.txt`) | See `release/SHA256SUMS.txt` |
+| SHA256 (current `SHA256SUMS.txt`) | `94C20A27F53D8EB544E6E33A773479762B92300C4406B88D795345A86040F765` |
 | Checksums file | `release/SHA256SUMS.txt` |
 | Release notes | `release/RELEASE_NOTES-v0.7.0.md` |
 

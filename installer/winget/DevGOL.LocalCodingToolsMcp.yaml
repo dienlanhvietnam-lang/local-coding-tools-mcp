@@ -1,0 +1,38 @@
+# Winget manifest template — submit to microsoft/winget-pkgs
+# Package: DevGOL.LocalCodingToolsMcp
+# Update InstallerUrl + InstallerSha256 after each release
+
+PackageIdentifier: DevGOL.LocalCodingToolsMcp
+PackageVersion: 0.7.0
+PackageLocale: en-US
+Publisher: DevGOL
+PublisherUrl: https://github.com/devgol
+PublisherSupportUrl: https://github.com/devgol/local-coding-tools-mcp/issues
+PackageName: Local Coding Tools MCP
+PackageUrl: https://github.com/devgol/local-coding-tools-mcp
+License: MIT
+LicenseUrl: https://github.com/devgol/local-coding-tools-mcp/blob/main/LICENSE
+ShortDescription: Local MCP server for coding and image editing (Cursor/VS Code)
+Description: |
+  MCP stdio server with coding tools, image crop/resize, background removal,
+  AI upscale (Real-ESRGAN), and safety guards for Cursor and VS Code.
+Moniker: local-coding-tools-mcp
+Tags:
+  - mcp
+  - cursor
+  - vscode
+  - image-editing
+Commands:
+  - local-coding-tools-mcp
+Installers:
+  - Architecture: x64
+    InstallerType: zip
+    NestedInstallerType: portable
+    NestedInstallerFiles:
+      - RelativeFilePath: local-coding-tools-mcp.cmd
+        PortableCommandAlias: local-coding-tools-mcp
+    InstallerUrl: https://github.com/devgol/local-coding-tools-mcp/releases/download/v0.7.0/local-coding-tools-mcp-0.7.0-win-x64.zip
+    InstallerSha256: PLACEHOLDER_SHA256_UPDATE_ON_RELEASE
+    ReleaseDate: 2026-06-05
+ManifestType: singleton
+ManifestVersion: 1.6.0

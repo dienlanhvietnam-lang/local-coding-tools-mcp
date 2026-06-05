@@ -1,0 +1,71 @@
+{
+  "name": "local-coding-tools-mcp",
+  "version": "0.7.0",
+  "private": true,
+  "description": "Local MCP server: coding tools + image editing for Cursor and VS Code",
+  "type": "module",
+  "main": "dist/server.js",
+  "types": "dist/server.d.ts",
+  "bin": {
+    "local-coding-tools-mcp": "dist/server.js"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "start": "node dist/server.js",
+    "smoke": "node scripts/smoke.mjs",
+    "verify": "node scripts/verify.mjs",
+    "release:customer": "powershell -ExecutionPolicy Bypass -File scripts/release-customer-pack.ps1",
+    "release:gate": "node scripts/release-gate.mjs",
+    "verify:customer-zip": "node scripts/verify-customer-zip-clean.mjs",
+    "validate:ci": "node scripts/validate-ci-yaml.mjs",
+    "verify:image-core": "node scripts/verify-image-profile.mjs --profile image-core",
+    "verify:image-full": "node scripts/verify-image-profile.mjs --profile full-image",
+    "verify:full-image-local": "powershell -ExecutionPolicy Bypass -File scripts/verify-full-image-local.ps1 -RequireFullImage",
+    "verify:image-deps": "node scripts/image-deps-smoke.mjs",
+    "test:e2e": "vitest run tests/mcp-e2e.test.ts",
+    "prepublishOnly": "npm run build && npm run verify",
+    "publish:check": "node scripts/publish-check.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "cursor",
+    "vscode",
+    "coding-tools",
+    "image-editing",
+    "sharp",
+    "background-removal",
+    "upscale"
+  ],
+  "author": "DevGOL",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devgol/local-coding-tools-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/devgol/local-coding-tools-mcp/issues"
+  },
+  "homepage": "https://github.com/devgol/local-coding-tools-mcp#readme",
+  "dependencies": {
+    "@imgly/background-removal-node": "^1.4.5",
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "sharp": "^0.34.2",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.4"
+  }
+}

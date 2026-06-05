@@ -1,0 +1,16 @@
+src/
+tests/
+scripts/smoke.mjs
+scripts/guard-audit.mjs
+scripts/run-mcp-audit.mjs
+.github/
+.dmctn/
+logs/
+.mcp-debug/
+node_modules/
+*.ts
+!dist/**/*.d.ts
+vitest.config.ts
+tsconfig.json
+.env
+.env.*

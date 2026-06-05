@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "local-coding-tools": {
+      "command": "node",
+      "args": [
+        "E:\\MCP\\local-coding-tools-mcp\\dist\\server.js"
+      ],
+      "cwd": "E:\\MCP\\local-coding-tools-mcp"
+    }
+  }
+}

@@ -4,42 +4,12 @@ import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { EXPECTED_TOOLS, EXPECTED_TOOL_COUNT } from "../src/toolRegistry.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const SERVER = path.join(ROOT, "dist", "server.js");
 const FIXTURE = path.join(ROOT, "tests", "fixtures", "sample-project");
-
-const EXPECTED_TOOLS = [
-  "run_coding_session",
-  "check_system",
-  "check_workspace",
-  "read_project_info",
-  "list_scripts",
-  "git_status",
-  "read_workspace_file",
-  "search_workspace",
-  "list_workspace_tree",
-  "check_url",
-  "write_workspace_file",
-  "run_project_script",
-  "collect_debug_bundle",
-  "read_lints",
-  "apply_patch",
-  "check_image_dependencies",
-  "image_info",
-  "image_ocr",
-  "image_crop",
-  "image_resize",
-  "image_remove_background",
-  "image_adjust",
-  "image_composite",
-  "image_batch",
-  "image_text",
-  "image_rounded",
-  "image_upscale",
-  "image_upscale_ai",
-];
 
 function parseResult(result: { content?: Array<{ type: string; text?: string }> }) {
   const text = result.content?.find((c) => c.type === "text")?.text ?? "{}";
@@ -66,7 +36,7 @@ describe("MCP E2E (stdio client — simulates Cursor/VS Code)", () => {
     await client?.close();
   });
 
-  it("lists 28 tools after initialize", async () => {
+  it(`lists ${EXPECTED_TOOL_COUNT} tools after initialize`, async () => {
     const tools = await client.listTools();
     const names = tools.tools.map((t) => t.name).sort();
     expect(names).toEqual([...EXPECTED_TOOLS].sort());

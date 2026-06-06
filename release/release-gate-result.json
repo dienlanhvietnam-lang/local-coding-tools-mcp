@@ -1,15 +1,15 @@
 {
   "overall": "PASS",
-  "version": "0.7.0",
-  "zipPath": "E:\\MCP\\local-coding-tools-mcp\\release\\local-coding-tools-mcp-v0.7.0-customer.zip",
-  "sha256": "49618037028885B56A38540616AC871B55704DA405136D33A36D4B626F371FA3",
-  "expectedToolCount": 27,
-  "actualToolCount": 27,
+  "version": "0.9.0",
+  "zipPath": "E:\\MCP\\local-coding-tools-mcp\\release\\local-coding-tools-mcp-v0.9.0-customer.zip",
+  "sha256": "DE24914E53BE98FCFE9DE18341180B2D294982BBB80DFD0E84DF19538B51D926",
+  "expectedToolCount": 37,
+  "actualToolCount": 37,
   "checks": [
     {
       "name": "package.json version",
       "status": "PASS",
-      "detail": "0.7.0"
+      "detail": "0.9.0"
     },
     {
       "name": "dist/server.js exists",
@@ -17,14 +17,14 @@
       "detail": "E:\\MCP\\local-coding-tools-mcp\\dist\\server.js"
     },
     {
-      "name": "tools/list count = 27",
+      "name": "tools/list count = 37",
       "status": "PASS",
-      "detail": "27"
+      "detail": "37"
     },
     {
       "name": "customer ZIP exists",
       "status": "PASS",
-      "detail": "E:\\MCP\\local-coding-tools-mcp\\release\\local-coding-tools-mcp-v0.7.0-customer.zip"
+      "detail": "E:\\MCP\\local-coding-tools-mcp\\release\\local-coding-tools-mcp-v0.9.0-customer.zip"
     },
     {
       "name": "SHA256SUMS.txt exists",
@@ -44,8 +44,8 @@
     {
       "name": "SHA256 matches ZIP",
       "status": "PASS",
-      "detail": "49618037028885B56A38540616AC871B55704DA405136D33A36D4B626F371FA3"
+      "detail": "DE24914E53BE98FCFE9DE18341180B2D294982BBB80DFD0E84DF19538B51D926"
     }
   ],
-  "timestamp": "2026-06-05T13:10:44.511Z"
+  "timestamp": "2026-06-06T18:31:09.843Z"
 }

@@ -11,7 +11,16 @@ import { readProjectInfo } from "./tools/readProjectInfo.js";
 import { listScripts } from "./tools/listScripts.js";
 import { runProjectScript } from "./tools/runProjectScript.js";
 import { gitStatus } from "./tools/gitStatus.js";
+import { gitInit } from "./tools/gitInit.js";
+import { gitAdd } from "./tools/gitAdd.js";
+import { gitCommit } from "./tools/gitCommit.js";
 import { checkUrl } from "./tools/checkUrl.js";
+import { fetchUrl } from "./tools/fetchUrl.js";
+import { deleteWorkspaceFile } from "./tools/deleteWorkspaceFile.js";
+import { moveWorkspaceFile } from "./tools/moveWorkspaceFile.js";
+import { runSafeCommand } from "./tools/runSafeCommand.js";
+import { searchWeb } from "./tools/searchWeb.js";
+import { chromeLoadExtension } from "./tools/chromeLoadExtension.js";
 import { collectDebugBundle } from "./tools/collectDebugBundle.js";
 import { readWorkspaceFile } from "./tools/readWorkspaceFile.js";
 import { writeWorkspaceFile } from "./tools/writeWorkspaceFile.js";
@@ -134,6 +143,51 @@ server.tool(
 );
 
 server.tool(
+  "git_init",
+  "Initialize a new git repository in the workspace (git init). Skips if already a repo.",
+  { workspacePath: workspacePathSchema },
+  EXECUTE,
+  async ({ workspacePath }) =>
+    jsonText(
+      await withToolLogging("git_init", { workspacePath, riskLevel: "medium" }, () =>
+        gitInit({ workspacePath })
+      )
+    )
+);
+
+server.tool(
+  "git_add",
+  "Stage files for commit (git add). Default paths: [.] — no force add.",
+  {
+    workspacePath: workspacePathSchema,
+    paths: z.array(z.string()).optional().describe("Relative paths to stage (default: all)"),
+  },
+  EXECUTE,
+  async ({ workspacePath, paths }) =>
+    jsonText(
+      await withToolLogging("git_add", { workspacePath, riskLevel: "medium" }, () =>
+        gitAdd({ workspacePath, paths })
+      )
+    )
+);
+
+server.tool(
+  "git_commit",
+  "Create a git commit with message (git commit -m). No push.",
+  {
+    workspacePath: workspacePathSchema,
+    message: z.string().describe("Commit message"),
+  },
+  EXECUTE,
+  async ({ workspacePath, message }) =>
+    jsonText(
+      await withToolLogging("git_commit", { workspacePath, riskLevel: "medium" }, () =>
+        gitCommit({ workspacePath, message })
+      )
+    )
+);
+
+server.tool(
   "read_workspace_file",
   "Read a text file (any path relative or absolute).",
   {
@@ -203,6 +257,39 @@ server.tool(
     )
 );
 
+server.tool(
+  "fetch_url",
+  "HTTP GET with response body (truncated by default 64KB). Returns status, content-type, body.",
+  {
+    url: z.string().describe("HTTP or HTTPS URL to fetch"),
+    timeoutMs: z.number().optional().describe("Timeout in ms (default 10000)"),
+    maxBodyChars: z.number().optional().describe("Max body chars (default 65536)"),
+  },
+  NETWORK,
+  async ({ url, timeoutMs, maxBodyChars }) =>
+    jsonText(
+      await withToolLogging("fetch_url", { riskLevel: "low" }, () =>
+        fetchUrl({ url, timeoutMs, maxBodyChars })
+      )
+    )
+);
+
+server.tool(
+  "search_web",
+  "Search the web. Uses BRAVE_SEARCH_API_KEY or SERPER_API_KEY if set; else DuckDuckGo Lite HTML.",
+  {
+    query: z.string().describe("Search query"),
+    maxResults: z.number().optional().describe("Max results 1-10 (default 5)"),
+  },
+  NETWORK,
+  async ({ query, maxResults }) =>
+    jsonText(
+      await withToolLogging("search_web", { riskLevel: "low" }, () =>
+        searchWeb({ query, maxResults })
+      )
+    )
+);
+
 // ── Write / execute (still guarded) ────────────────────────────────────────
 
 server.tool(
@@ -224,6 +311,41 @@ server.tool(
 );
 
 server.tool(
+  "delete_workspace_file",
+  "Delete a file or empty directory in workspace. Use recursive: true for non-empty directories.",
+  {
+    workspacePath: workspacePathSchema,
+    relativePath: z.string().describe("Path relative to workspace root"),
+    recursive: z.boolean().optional().describe("Delete directory recursively (default false)"),
+  },
+  WRITE,
+  async ({ workspacePath, relativePath, recursive }) =>
+    jsonText(
+      await withToolLogging("delete_workspace_file", { workspacePath, riskLevel: "medium" }, () =>
+        deleteWorkspaceFile({ workspacePath, relativePath, recursive })
+      )
+    )
+);
+
+server.tool(
+  "move_workspace_file",
+  "Move or rename a file within the workspace.",
+  {
+    workspacePath: workspacePathSchema,
+    fromRelativePath: z.string().describe("Source path relative to workspace"),
+    toRelativePath: z.string().describe("Destination path relative to workspace"),
+    createDirs: z.boolean().optional().describe("Create parent dirs at destination (default true)"),
+  },
+  WRITE,
+  async ({ workspacePath, fromRelativePath, toRelativePath, createDirs }) =>
+    jsonText(
+      await withToolLogging("move_workspace_file", { workspacePath, riskLevel: "medium" }, () =>
+        moveWorkspaceFile({ workspacePath, fromRelativePath, toRelativePath, createDirs })
+      )
+    )
+);
+
+server.tool(
   "run_project_script",
   "Run a script that exists in package.json only. Output may be truncated.",
   {
@@ -237,6 +359,41 @@ server.tool(
     jsonText(
       await withToolLogging("run_project_script", { workspacePath, riskLevel: "medium" }, () =>
         runProjectScript({ workspacePath, script, projectSubdir, timeoutMs })
+      )
+    )
+);
+
+server.tool(
+  "run_safe_command",
+  "Run an allowlisted command (node, npm, pnpm, git, python, powershell) with args array. No free-form shell.",
+  {
+    workspacePath: workspacePathSchema,
+    command: z.string().describe("Executable name e.g. node, git, npm"),
+    args: z.array(z.string()).optional().describe("Arguments array (no shell metacharacters)"),
+    timeoutMs: z.number().optional().describe("Timeout in ms (default 120000)"),
+  },
+  EXECUTE,
+  async ({ workspacePath, command, args, timeoutMs }) =>
+    jsonText(
+      await withToolLogging("run_safe_command", { workspacePath, riskLevel: "medium" }, () =>
+        runSafeCommand({ workspacePath, command, args, timeoutMs })
+      )
+    )
+);
+
+server.tool(
+  "chrome_load_extension",
+  "Load unpacked Chrome/Edge extension in a temporary profile (dev sideload, not Web Store install).",
+  {
+    workspacePath: workspacePathSchema,
+    extensionPath: z.string().describe("Path to unpacked extension folder with manifest.json"),
+    chromePath: z.string().optional().describe("Optional path to chrome.exe or msedge.exe"),
+  },
+  EXECUTE,
+  async ({ workspacePath, extensionPath, chromePath }) =>
+    jsonText(
+      await withToolLogging("chrome_load_extension", { workspacePath, riskLevel: "high" }, () =>
+        chromeLoadExtension({ workspacePath, extensionPath, chromePath })
       )
     )
 );

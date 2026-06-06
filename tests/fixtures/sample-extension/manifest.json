@@ -1,0 +1,9 @@
+{
+  "manifest_version": 3,
+  "name": "DMCTN Sample Extension",
+  "version": "1.0.0",
+  "description": "Fixture for chrome_load_extension hard test",
+  "action": {
+    "default_title": "Sample"
+  }
+}

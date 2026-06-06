@@ -8,13 +8,14 @@
 const crypto = require('crypto');
 
 const mcpTools = [
-  'run_coding_session','check_system','check_workspace','read_project_info',
-  'list_scripts','git_status','read_workspace_file','search_workspace',
-  'list_workspace_tree','check_url','write_workspace_file','run_project_script',
-  'collect_debug_bundle','read_lints','apply_patch','check_image_dependencies',
-  'image_info','image_ocr','image_crop','image_resize','image_remove_background',
-  'image_adjust','image_composite','image_batch','image_text',
-  'image_rounded','image_upscale','image_upscale_ai'
+  'apply_patch','check_image_dependencies','check_system','check_url','check_workspace',
+  'chrome_load_extension','collect_debug_bundle','delete_workspace_file','fetch_url',
+  'git_add','git_commit','git_init','git_status','image_adjust','image_batch',
+  'image_composite','image_crop','image_info','image_ocr','image_remove_background',
+  'image_resize','image_rounded','image_text','image_upscale','image_upscale_ai',
+  'list_scripts','list_workspace_tree','move_workspace_file','read_lints',
+  'read_project_info','read_workspace_file','run_coding_session','run_project_script',
+  'run_safe_command','search_web','search_workspace','write_workspace_file'
 ];
 
 const cursorBuiltinTools = [

@@ -267,6 +267,42 @@ export async function runGitShortStatus(workspacePath: string): Promise<ExecResu
   });
 }
 
+export function isGitRepo(workspacePath: string): boolean {
+  const cwd = path.resolve(workspacePath);
+  return fs.existsSync(path.join(cwd, ".git"));
+}
+
+export async function runGitInit(workspacePath: string): Promise<ExecResult> {
+  const cwd = path.resolve(workspacePath);
+  return runCommand("git", ["init"], { cwd, timeoutMs: 30_000 });
+}
+
+export async function runGitAdd(
+  workspacePath: string,
+  paths: string[]
+): Promise<ExecResult> {
+  const cwd = path.resolve(workspacePath);
+  const args = ["add", ...paths];
+  return runCommand("git", args, { cwd, timeoutMs: 60_000 });
+}
+
+export async function runGitCommit(
+  workspacePath: string,
+  message: string
+): Promise<ExecResult> {
+  const cwd = path.resolve(workspacePath);
+  return runCommand("git", ["commit", "-m", message], {
+    cwd,
+    timeoutMs: 60_000,
+    env: {
+      GIT_AUTHOR_NAME: process.env.GIT_AUTHOR_NAME ?? "local-coding-tools-mcp",
+      GIT_AUTHOR_EMAIL: process.env.GIT_AUTHOR_EMAIL ?? "mcp@local.invalid",
+      GIT_COMMITTER_NAME: process.env.GIT_COMMITTER_NAME ?? "local-coding-tools-mcp",
+      GIT_COMMITTER_EMAIL: process.env.GIT_COMMITTER_EMAIL ?? "mcp@local.invalid",
+    },
+  });
+}
+
 export async function detectPackageManager(workspacePath: string): Promise<"npm" | "pnpm"> {
   const cwd = path.resolve(workspacePath);
   try {

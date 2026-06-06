@@ -65,8 +65,8 @@ describe("release gate", () => {
     expect(gate.zipRequiredScan(buf)).toEqual([]);
   });
 
-  it("EXPECTED_TOOL_COUNT is 28", () => {
-    expect(gate.EXPECTED_TOOL_COUNT).toBe(28);
+  it("EXPECTED_TOOL_COUNT is 37", () => {
+    expect(gate.EXPECTED_TOOL_COUNT).toBe(37);
   });
 
   describe("live release gate (when pack built)", () => {

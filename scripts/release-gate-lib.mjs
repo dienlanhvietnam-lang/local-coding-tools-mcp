@@ -7,7 +7,7 @@ import path from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
-export const EXPECTED_TOOL_COUNT = 28;
+export const EXPECTED_TOOL_COUNT = 37;
 
 export const FORBIDDEN_PATTERNS = [
   [/node_modules/i, "node_modules"],

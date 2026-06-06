@@ -106,8 +106,8 @@ for (const rel of required) {
   }
 }
 
-if (pkg.version !== "0.7.0") {
-  console.error(`✗ expected version 0.7.0, got ${pkg.version}`);
+if (pkg.version !== "0.9.0") {
+  console.error(`✗ expected version 0.9.0, got ${pkg.version}`);
   ok = false;
 } else {
   console.log(`✓ package.json version ${pkg.version}`);
@@ -118,7 +118,7 @@ const cursorInstall = fs.readFileSync(
   path.join(ROOT, "scripts/install-cursor-mcp.ps1"),
   "utf8",
 );
-if (!cursorInstall.includes("EnableAllowlist") || !cursorInstall.includes("Run Everything")) {
+if (!cursorInstall.includes("mcpAllowlist") || !cursorInstall.includes("Run Everything")) {
   console.error("✗ install-cursor-mcp.ps1 missing allowlist / Run Everything warning");
   ok = false;
 } else {
@@ -245,5 +245,5 @@ if (!ok) {
 }
 const label = isCustomerPack
   ? "Verify PASSED (customer pack)"
-  : "Verify PASSED (v0.7.0 + customer install pack R1)";
+  : "Verify PASSED (v0.9.0 + customer install pack)";
 console.log(`\n${label}`);

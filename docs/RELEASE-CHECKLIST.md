@@ -59,7 +59,7 @@ powershell -File scripts\install-cursor-mcp.ps1 -EnableAllowlist
 powershell -File scripts\test-mcp-install.ps1
 ```
 
-- [ ] MCP panel hiển thị **27 tools**
+- [ ] MCP panel hiển thị **37 tools**
 - [ ] Không có token / `.env` trong ZIP
 
 ### Quick prompts

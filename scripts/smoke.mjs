@@ -58,9 +58,9 @@ await run("run_project_script build", async () => {
   if (r.status !== "PASS") throw new Error(JSON.stringify(r));
 });
 
-await run("run_project_script blocked", async () => {
+await run("run_project_script danger not in package.json", async () => {
   const r = await runProjectScript({ workspacePath: FIXTURE, script: "danger", timeoutMs: 5000 });
-  if (r.status !== "BLOCKED") throw new Error("expected BLOCKED");
+  if (r.status !== "FAIL") throw new Error(`expected FAIL for missing script, got ${r.status}`);
 });
 
 const failed = checks.filter((c) => !c.ok);

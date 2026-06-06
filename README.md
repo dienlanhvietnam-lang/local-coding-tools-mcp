@@ -1,8 +1,8 @@
 # Local Coding Tools MCP
 
-**v0.7.0** — MCP stdio server: **coding + image editing** cho Cursor / VS Code.
+**v0.9.0** — MCP stdio server: **coding + image editing** cho Cursor / VS Code.
 
-**27 tools** | npm publish ready | winget template included
+**37 tools** | npm publish ready | winget template included
 
 ## Image profiles
 
@@ -37,18 +37,18 @@ See **[docs/HUONG-DAN-FULL-IMAGE.md](docs/HUONG-DAN-FULL-IMAGE.md)**.
 
 **Troubleshooting:** `image_remove_background` / `image_upscale_ai` showing **SKIPPED** in image-core is expected without optional deps. In full-image profile, missing deps cause verify **FAIL**.
 
-## Image tools (12 + check)
+## Image tools (13 + check)
 
 | Tool | Mô tả |
 |------|--------|
 | `image_info` / `image_crop` / `image_resize` | Cơ bản |
+| `image_ocr` | OCR text (Tesseract.js eng/vie, offline tessdata) |
 | `image_remove_background` | imgly-node / rembg / remove.bg |
 | `image_adjust` / `image_composite` / `image_batch` | Chỉnh sửa nâng cao |
 | `image_text` / `image_rounded` | Caption, bo góc, avatar tròn |
 | `image_upscale` | Lanczos3 (sharp) |
 | **`image_upscale_ai`** | **Real-ESRGAN AI** — SKIPPED if no CLI/token (image-core OK) |
 | **`check_image_dependencies`** | Probe sharp/rembg/Real-ESRGAN/Replicate (no secrets printed) |
-| `image_remove_background` | SKIPPED in image-core if no rembg/API/imgly |
 
 ### AI generative upscale
 
@@ -57,9 +57,25 @@ See **[docs/HUONG-DAN-FULL-IMAGE.md](docs/HUONG-DAN-FULL-IMAGE.md)**.
 | `cli` / `auto` | [realesrgan-ncnn-vulkan](https://github.com/xinntao/Real-ESRGAN-ncnn-vulkan) on PATH |
 | `api` / `auto` | Replicate Real-ESRGAN — env `REPLICATE_API_TOKEN` |
 
-## Coding tools (14)
+## Coding tools (23)
 
-`run_coding_session`, `check_system`, `check_workspace`, `read_project_info`, `list_scripts`, `read_workspace_file`, `search_workspace`, `list_workspace_tree`, `read_lints`, `apply_patch`, `write_workspace_file`, `run_project_script`, `git_status`, `check_url`, `collect_debug_bundle`
+**Audit / read:** `run_coding_session`, `check_system`, `check_workspace`, `read_project_info`, `list_scripts`, `read_workspace_file`, `search_workspace`, `list_workspace_tree`, `read_lints`, `git_status`, `check_url`, `fetch_url`, `search_web`, `collect_debug_bundle`
+
+**Write / FS:** `apply_patch`, `write_workspace_file`, `delete_workspace_file`, `move_workspace_file`
+
+**Execute:** `run_project_script`, `run_safe_command` (allowlist: node, npm, pnpm, git, python, powershell)
+
+**Git write:** `git_init`, `git_add`, `git_commit` (no push)
+
+**Browser dev:** `chrome_load_extension` (unpacked sideload, temp profile)
+
+### Optional env for `search_web`
+
+| Variable | Provider |
+|----------|----------|
+| `BRAVE_SEARCH_API_KEY` | Brave Search API (preferred) |
+| `SERPER_API_KEY` | Serper Google API |
+| *(none)* | DuckDuckGo Lite HTML (may SKIPPED if blocked) |
 
 ## Install
 
@@ -135,10 +151,10 @@ npm run release:customer
 
 Output:
 
-- `release/local-coding-tools-mcp-v0.7.0-customer.zip`
+- `release/local-coding-tools-mcp-v0.9.0-customer.zip`
 - `release/SHA256SUMS.txt`
 - `release/release-gate-result.json`
-- `release/RELEASE_NOTES-v0.7.0.md`
+- `release/RELEASE_NOTES-v0.9.0.md`
 
 Verify ZIP on a simulated clean machine:
 
@@ -155,7 +171,7 @@ npm run release:gate
 - [ ] Use current ZIP SHA256 from `SHA256SUMS.txt` (latest: `49618037...` or newer)
 - [ ] `npm install && npm run build` in extracted folder
 - [ ] Run `install-vscode-mcp.ps1` and/or `install-cursor-mcp.ps1`
-- [ ] Reload IDE; confirm **27 tools** in MCP panel
+- [ ] Reload IDE; confirm **37 tools** in MCP panel
 - [ ] Test prompt: `Gọi check_system qua MCP local-coding-tools`
 - [ ] Cursor: avoid Run Everything; use Allowlist if needed (`-EnableAllowlist`)
 
@@ -166,7 +182,8 @@ See [docs/HUONG-DAN-VSCODE-COPILOT.md](docs/HUONG-DAN-VSCODE-COPILOT.md) and [do
 | Script | Description |
 |--------|-------------|
 | `npm test` | Unit + image profile tests |
-| `npm run test:e2e` | 27 MCP tools |
+| `npm run test:e2e` | 37 MCP tools (E2E) |
+| `npm run test:hard-all` | Hard test — call all 37 tools |
 | `npm run verify:image-deps` | Image dependency scripts smoke |
 | `npm run verify:image-core` | Image core profile verify |
 | `npm run verify:image-full` | Full image profile verify |

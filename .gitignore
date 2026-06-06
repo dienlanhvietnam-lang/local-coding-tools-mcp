@@ -52,4 +52,6 @@ Desktop.ini
 
 # --- OCR tessdata (sync via npm run sync:tessdata / postinstall) ---
 eng.traineddata
+vie.traineddata
+*.traineddata
 resources/tessdata/*.gz

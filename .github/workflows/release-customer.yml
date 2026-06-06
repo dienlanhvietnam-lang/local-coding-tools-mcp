@@ -24,8 +24,8 @@ jobs:
       - name: Package customer ZIP
         shell: pwsh
         run: |
-          ./scripts/package-customer-zip.ps1 -Version "${{ github.ref_name }}"
           $ver = "${{ github.ref_name }}".TrimStart('v')
+          ./scripts/package-customer-zip.ps1 -Version $ver
           $zip = "release/local-coding-tools-mcp-v${ver}-customer.zip"
           if (-not (Test-Path $zip)) { throw "ZIP not found: $zip" }
           $hash = (Get-FileHash $zip -Algorithm SHA256).Hash

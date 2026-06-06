@@ -10,16 +10,27 @@ powershell -ExecutionPolicy Bypass -File scripts/package-customer-zip.ps1 -Versi
 
 Ghi SHA256 từ output script vào `release/SHA256SUMS.txt`.
 
-## Publish (cần `gh auth login` hoặc `GH_TOKEN`)
+## Cách A — GitHub Actions (khuyên dùng)
+
+Sau khi `gh auth login` và push tag, workflow tự build + upload ZIP:
+
+```powershell
+gh auth login
+cd E:\MCP\local-coding-tools-mcp
+git push origin main
+git push origin v0.7.0
+```
+
+Theo dõi: **Actions → Release Customer ZIP**
+
+## Cách B — Publish thủ công (gh CLI)
 
 ```powershell
 gh auth login
 # hoặc: $env:GH_TOKEN = "<token có quyền repo>"
 
-cd E:\MCP\vscode-extension-dmctn-mcp
-powershell -ExecutionPolicy Bypass -File scripts/publish-github-release.ps1 -Version 0.7.0
-node scripts/sync-server-manifest.mjs 0.7.0
-npm run package
+cd E:\MCP\scripts
+powershell -ExecutionPolicy Bypass -File publish-all.ps1 -Version 0.7.0
 ```
 
 URL sau publish:

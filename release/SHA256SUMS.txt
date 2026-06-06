@@ -1,5 +1,4 @@
 ﻿# local-coding-tools-mcp customer pack checksums
-# Generated: 2026-06-05 20:45:39
+# Generated: 2026-06-06
 # Version: 0.7.0
-94C20A27F53D8EB544E6E33A773479762B92300C4406B88D795345A86040F765  local-coding-tools-mcp-v0.7.0-customer.zip
-
+A05BF49917A81A410376029E3851FE9410AE776A49F9BFB146C880D661822224  local-coding-tools-mcp-v0.7.0-customer.zip

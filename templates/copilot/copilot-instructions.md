@@ -1,39 +1,45 @@
-# Copilot instructions — prefer local-coding-tools MCP
+# Copilot instructions — BẮT BUỘC dùng MCP local-coding-tools (61 tools)
 
-This workspace uses **local-coding-tools** MCP. Follow these rules in Copilot Chat.
+Workspace này dùng MCP server **local-coding-tools** (v0.11.x, **61 tools**). Trong Copilot Chat **phải** chọn agent **DMCTN-MCP**.
 
-## MCP first
+## MCP_ONLY — bắt buộc
 
-- **Prefer** tools from MCP server `local-coding-tools` over default terminal or built-in file tools.
-- When the **DMCTN-MCP** custom agent is selected, only MCP tools from `local-coding-tools/*` are in scope.
+- **Chỉ** gọi tools từ `local-coding-tools/*` khi agent **DMCTN-MCP** đang bật.
+- **Cấm** dùng terminal/shell (`execute/*`, `runInTerminal`, `sendToTerminal`) nếu MCP có tool thay thế.
+- **Cấm** dùng `read/readFile`, `edit/editFiles`, `search/codebase`, `search/textSearch` cho file trong workspace — dùng `read_workspace_file`, `apply_patch`, `write_workspace_file`, `search_workspace`, `semantic_search`, `glob_workspace`.
+- **Cấm** `npm install`, `npm test`, `npm run build` qua shell — dùng `run_project_script` hoặc `run_coding_session`.
+- **Cấm** `Set-Location` + chuỗi lệnh shell cho build/test.
 
-## Task mapping
+## Ánh xạ tác vụ → MCP tool
 
-| User intent | Use MCP tool |
-|-------------|--------------|
+| Ý định người dùng | Tool MCP |
+|-------------------|----------|
 | build, test, verify, smoke, lint, typecheck | `run_project_script` |
-| project audit, health check, debug prep | `run_coding_session` |
-| read file | `read_workspace_file` |
-| search code | `search_workspace` |
-| edit file safely | `apply_patch` or `write_workspace_file` |
-| image operations | `image_*` tools |
-| image deps profile | `check_image_dependencies` |
+| lệnh node/git/npm allowlist | `run_safe_command` |
+| audit / health check / debug prep | `run_coding_session` |
+| đọc file (có line range) | `read_workspace_file` |
+| tìm code | `search_workspace`, `semantic_search`, `glob_workspace` |
+| sửa file an toàn | `apply_patch`, `write_workspace_file` |
+| git | `git_*` tools |
+| HTTP / web | `check_url`, `fetch_url`, `http_request`, `search_web` |
+| ảnh | `image_*`, `check_image_dependencies`, `generate_image` |
+| output lớn / cache | `fetch_cached_output`, `estimate_tool_output` |
+| tiếp tục phiên | `get_session_context`, `summarize_tool_history` |
 
-## Shell policy
+## Workflow tiết kiệm token
 
-- **No free shell commands** when an MCP tool can do the job.
-- Do **not** run `npm install`, `npm test`, `npm run build` via terminal — use `run_project_script`.
-- Do **not** use `Set-Location` + npm chains.
+1. Search trước (`search_workspace` / `semantic_search`), đọc sau (`read_workspace_file` + `startLine`/`lineCount`).
+2. Có `cacheId` → `fetch_cached_output`, không gọi lại tool cũ.
+3. Chuyển task → `clear_session_context`.
 
-## Evidence and safety
+## Bằng chứng & an toàn
 
-- Conclude **PASS** or **FAIL** from MCP JSON responses only.
-- Never expose secrets, API keys, tokens, or `.env` values.
-- Avoid unrestricted shell / terminal tool mode; MCP tools only when available.
+- Kết luận **PASS/FAIL** chỉ từ JSON MCP.
+- Không lộ secret, API key, token, `.env`.
 
-## Troubleshooting
+## Khắc phục
 
-1. Reload VS Code (**Developer: Reload Window**).
-2. Run **MCP: Show Installed Servers** — confirm `local-coding-tools` is listed.
-3. In Copilot Chat, select agent **DMCTN-MCP** (not the default agent).
-4. If tools still fail, verify `.vscode/mcp.json` and `.github/agents/DMCTN-MCP.agent.md` exist.
+1. **Developer: Reload Window**
+2. **MCP: Show Installed Servers** — phải thấy `local-coding-tools`
+3. Copilot Chat → Agent → **DMCTN-MCP** (không dùng agent mặc định)
+4. Kiểm tra `.vscode/mcp.json` và `.github/agents/DMCTN-MCP.agent.md`

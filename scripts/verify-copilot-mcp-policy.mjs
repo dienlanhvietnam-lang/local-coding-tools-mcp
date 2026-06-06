@@ -53,12 +53,17 @@ add(".github/agents/DMCTN-MCP.agent.md exists", agent.text !== null, agent.full)
 
 if (agent.text) {
   add(
-    "agent has tools: local-coding-tools/*",
-    /local-coding-tools\/\*/.test(agent.text),
+    "agent has explicit local-coding-tools tools",
+    /local-coding-tools\/check_system/.test(agent.text) &&
+      /local-coding-tools\/fetch_cached_output/.test(agent.text),
   );
   add(
     "agent frontmatter name DMCTN-MCP",
     /^---[\s\S]*?name:\s*DMCTN-MCP/m.test(agent.text),
+  );
+  add(
+    "agent enforces MCP_ONLY policy",
+    /MCP_ONLY|BẮT BUỘC/.test(agent.text),
   );
 }
 
@@ -73,6 +78,10 @@ if (instr.text) {
   add(
     "instructions map run_coding_session",
     /run_coding_session/.test(instr.text),
+  );
+  add(
+    "instructions enforce MCP_ONLY",
+    /MCP_ONLY|BẮT BUỘC/.test(instr.text),
   );
   add(
     "no Run Everything default",

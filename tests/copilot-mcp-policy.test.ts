@@ -49,9 +49,11 @@ describe("copilot MCP force policy installer R1", () => {
       "utf8",
     );
     expect(agent).toMatch(/name:\s*DMCTN-MCP/);
-    expect(agent).toContain("local-coding-tools/*");
+    expect(agent).toContain("local-coding-tools/check_system");
+    expect(agent).toContain("local-coding-tools/fetch_cached_output");
     expect(agent).toContain("run_project_script");
     expect(agent).toContain("MCP_NOT_AVAILABLE");
+    expect(agent).toMatch(/MCP_ONLY|BẮT BUỘC/);
 
     const instr = fs.readFileSync(
       path.join(ROOT, "templates/copilot/copilot-instructions.md"),
@@ -59,6 +61,7 @@ describe("copilot MCP force policy installer R1", () => {
     );
     expect(instr).toContain("run_project_script");
     expect(instr).toContain("run_coding_session");
+    expect(instr).toMatch(/MCP_ONLY|BẮT BUỘC/);
     expect(instr).not.toMatch(/Run Everything.*default/i);
   });
 
@@ -82,7 +85,7 @@ describe("copilot MCP force policy installer R1", () => {
       expect(fs.existsSync(mcpPath)).toBe(true);
 
       const agentText = fs.readFileSync(agentPath, "utf8");
-      expect(agentText).toContain("local-coding-tools/*");
+      expect(agentText).toContain("local-coding-tools/check_system");
 
       execSync(`node scripts/verify-copilot-mcp-policy.mjs "${tmp}"`, {
         cwd: ROOT,

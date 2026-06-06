@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const SERVER_NAME = "local-coding-tools-mcp";
-export const SERVER_VERSION = "0.11.1";
+export const SERVER_VERSION = "0.11.2";
 
 /** Max image file size for read/process (50 MB) */
 export const MAX_IMAGE_BYTES = 50 * 1024 * 1024;

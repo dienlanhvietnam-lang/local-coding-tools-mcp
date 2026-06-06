@@ -41,6 +41,7 @@ const baseRequired = [
   "pilot-kit/CHECKLIST-VSCODE-COPILOT.md",
   "scripts/package-customer-zip.ps1",
   "scripts/pilot-stdio.mjs",
+  "scripts/expected-tools.mjs",
   "scripts/check-image-deps.ps1",
   "scripts/check-image-deps.mjs",
   "scripts/install-image-deps.ps1",
@@ -106,8 +107,8 @@ for (const rel of required) {
   }
 }
 
-if (pkg.version !== "0.11.1") {
-  console.error(`✗ expected version 0.11.1, got ${pkg.version}`);
+if (pkg.version !== "0.11.2") {
+  console.error(`✗ expected version 0.11.2, got ${pkg.version}`);
   ok = false;
 } else {
   console.log(`✓ package.json version ${pkg.version}`);
@@ -245,5 +246,5 @@ if (!ok) {
 }
 const label = isCustomerPack
   ? "Verify PASSED (customer pack)"
-  : "Verify PASSED (v0.11.1 + customer install pack)";
+  : "Verify PASSED (v0.11.2 + customer install pack)";
 console.log(`\n${label}`);

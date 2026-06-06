@@ -1,6 +1,6 @@
 # Local Coding Tools MCP
 
-**v0.11.1** — MCP stdio server: **coding + image editing** cho Cursor / VS Code.
+**v0.11.2** — MCP stdio server: **coding + image editing** cho Cursor / VS Code.
 
 **61 tools** | npm publish ready | winget template included
 

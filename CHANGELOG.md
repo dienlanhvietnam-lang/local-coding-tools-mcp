@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.11.2 — Customer ZIP fix
+
+- **Customer ZIP:** thêm `scripts/expected-tools.mjs` và `hard-test-all-tools.mjs` (fix `pilot-stdio.mjs` ERR_MODULE_NOT_FOUND khi Kiểm tra MCP).
+- **verify.mjs:** bắt buộc có `expected-tools.mjs` trong customer pack.
+
 ## v0.11.1 — HTTP / Chrome tools patch
 
 Nâng cấp 3 tool có sẵn (61 tools, không thêm tool mới).

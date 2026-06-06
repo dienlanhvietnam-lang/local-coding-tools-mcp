@@ -9,7 +9,7 @@
 | Field | Value |
 |-------|-------|
 | Package | `local-coding-tools-mcp` |
-| Version | `0.11.1` |
+| Version | `0.11.2` |
 | MCP tools | **61** |
 | npm publish | **Not released** |
 | winget | **Not released** |

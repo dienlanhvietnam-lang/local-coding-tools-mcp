@@ -1,8 +1,42 @@
 # Local Coding Tools MCP
 
-**v0.9.0** — MCP stdio server: **coding + image editing** cho Cursor / VS Code.
+**v0.10.0** — MCP stdio server: **coding + image editing** cho Cursor / VS Code.
 
-**37 tools** | npm publish ready | winget template included
+**56 tools** | npm publish ready | winget template included
+
+## Tools moi v0.10.0 (37 -> 56)
+
+| Nhom | Tools |
+|------|-------|
+| Quality | `check_js_syntax`, `run_format` |
+| FS batch | `read_binary_file`, `copy_workspace_file`, `delete_pattern` (dryRun mac dinh), `create_directory`, `file_stats` |
+| Search | `glob_workspace` (pattern `**/*.ts`), `semantic_search` (embeddings/keyword fallback) |
+| Network | `http_request` (GET/POST/PUT/PATCH/DELETE/HEAD, body 256KB) |
+| Git nang cao | `git_push`, `git_pull`, `git_branch`, `git_checkout`, `git_merge` |
+| Meta | `edit_notebook` (.ipynb), `todo_write` / `todo_read` (MCP-only) , `generate_image` (OpenAI/Replicate) |
+
+`run_safe_command` mo rong allowlist: them `npx`, `pip`, `go`, `curl`, `docker`, `cargo`, `dotnet`, `yarn`, `bun`, `tsc`, `eslint`, `prettier`.
+
+### Meta Cursor KHONG ho tro (host-only)
+
+MCP stdio khong dieu khien vong lap agent / UI cua Cursor, nen 5 tool sau **khong** the la MCP tool — chung la ha tang host:
+
+| Tool | Ly do |
+|------|-------|
+| `Task` (subagent) | Spawn subagent thuoc agent loop host |
+| `SwitchMode` | Doi Plan/Agent mode cua Cursor |
+| `CreatePlan` | Tao plan UI cua Cursor |
+| `Await` | Cho background shell/task cua host |
+| `AskQuestion` | Form hoi user trong UI host |
+
+### Env keys tuy chon
+
+| Variable | Tool |
+|----------|------|
+| `BRAVE_SEARCH_API_KEY` / `SERPER_API_KEY` | `search_web` |
+| `OPENAI_API_KEY` / `REPLICATE_API_TOKEN` | `generate_image` |
+| `OPENAI_API_KEY` / `VOYAGE_API_KEY` | `semantic_search` (embeddings) |
+| `REPLICATE_API_TOKEN` | `image_upscale_ai` |
 
 ## Image profiles
 

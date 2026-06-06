@@ -21,6 +21,20 @@ import { moveWorkspaceFile } from "./tools/moveWorkspaceFile.js";
 import { runSafeCommand } from "./tools/runSafeCommand.js";
 import { searchWeb } from "./tools/searchWeb.js";
 import { chromeLoadExtension } from "./tools/chromeLoadExtension.js";
+import { checkJsSyntax } from "./tools/checkJsSyntax.js";
+import { runFormat } from "./tools/runFormat.js";
+import { readBinaryFile } from "./tools/readBinaryFile.js";
+import { copyWorkspaceFile } from "./tools/copyWorkspaceFile.js";
+import { createDirectory } from "./tools/createDirectory.js";
+import { deletePattern } from "./tools/deletePattern.js";
+import { fileStats } from "./tools/fileStats.js";
+import { globWorkspace } from "./tools/globWorkspace.js";
+import { httpRequest } from "./tools/httpRequest.js";
+import { gitPush, gitPull, gitBranch, gitCheckout, gitMerge } from "./tools/gitAdvanced.js";
+import { editNotebook } from "./tools/editNotebook.js";
+import { todoWrite, todoRead } from "./tools/todoStore.js";
+import { generateImage } from "./tools/generateImage.js";
+import { semanticSearch } from "./tools/semanticSearch.js";
 import { collectDebugBundle } from "./tools/collectDebugBundle.js";
 import { readWorkspaceFile } from "./tools/readWorkspaceFile.js";
 import { writeWorkspaceFile } from "./tools/writeWorkspaceFile.js";
@@ -188,6 +202,91 @@ server.tool(
 );
 
 server.tool(
+  "git_push",
+  "Push commits to remote (git push). Uses --force-with-lease if force=true. SKIPPED if not a repo.",
+  {
+    workspacePath: workspacePathSchema,
+    remote: z.string().optional().describe("Remote name e.g. origin"),
+    branch: z.string().optional().describe("Branch name"),
+    force: z.boolean().optional().describe("Force push with lease (default false)"),
+    setUpstream: z.boolean().optional().describe("Set upstream (-u)"),
+  },
+  EXECUTE,
+  async ({ workspacePath, remote, branch, force, setUpstream }) =>
+    jsonText(
+      await withToolLogging("git_push", { workspacePath, riskLevel: "high" }, () =>
+        gitPush({ workspacePath, remote, branch, force, setUpstream })
+      )
+    )
+);
+
+server.tool(
+  "git_pull",
+  "Pull from remote (git pull). SKIPPED if not a repo.",
+  {
+    workspacePath: workspacePathSchema,
+    remote: z.string().optional().describe("Remote name e.g. origin"),
+    branch: z.string().optional().describe("Branch name"),
+  },
+  EXECUTE,
+  async ({ workspacePath, remote, branch }) =>
+    jsonText(
+      await withToolLogging("git_pull", { workspacePath, riskLevel: "medium" }, () =>
+        gitPull({ workspacePath, remote, branch })
+      )
+    )
+);
+
+server.tool(
+  "git_branch",
+  "List branches, or create a branch when 'create' is provided. SKIPPED if not a repo.",
+  {
+    workspacePath: workspacePathSchema,
+    create: z.string().optional().describe("New branch name to create"),
+  },
+  EXECUTE,
+  async ({ workspacePath, create }) =>
+    jsonText(
+      await withToolLogging("git_branch", { workspacePath, riskLevel: "medium" }, () =>
+        gitBranch({ workspacePath, create })
+      )
+    )
+);
+
+server.tool(
+  "git_checkout",
+  "Switch to a branch (git checkout), or create with create=true. SKIPPED if not a repo.",
+  {
+    workspacePath: workspacePathSchema,
+    branch: z.string().describe("Branch name"),
+    create: z.boolean().optional().describe("Create branch (-b)"),
+  },
+  EXECUTE,
+  async ({ workspacePath, branch, create }) =>
+    jsonText(
+      await withToolLogging("git_checkout", { workspacePath, riskLevel: "medium" }, () =>
+        gitCheckout({ workspacePath, branch, create })
+      )
+    )
+);
+
+server.tool(
+  "git_merge",
+  "Merge a branch into current (git merge --no-edit). Reports conflicts. SKIPPED if not a repo.",
+  {
+    workspacePath: workspacePathSchema,
+    branch: z.string().describe("Branch to merge into current"),
+  },
+  EXECUTE,
+  async ({ workspacePath, branch }) =>
+    jsonText(
+      await withToolLogging("git_merge", { workspacePath, riskLevel: "high" }, () =>
+        gitMerge({ workspacePath, branch })
+      )
+    )
+);
+
+server.tool(
   "read_workspace_file",
   "Read a text file (any path relative or absolute).",
   {
@@ -242,6 +341,152 @@ server.tool(
 );
 
 server.tool(
+  "glob_workspace",
+  "Find files by glob pattern (e.g. **/*.{ts,tsx}). Skips node_modules/.git. Read-only.",
+  {
+    workspacePath: workspacePathSchema,
+    pattern: z.string().describe("Glob pattern e.g. **/*.ts"),
+    relativeDir: z.string().optional().describe("Base directory (default .)"),
+    maxResults: z.number().optional().describe("Max matches (default 1000)"),
+    includeDirs: z.boolean().optional().describe("Include directories (default false)"),
+  },
+  READ_ONLY,
+  async ({ workspacePath, pattern, relativeDir, maxResults, includeDirs }) =>
+    jsonText(
+      await withToolLogging("glob_workspace", { workspacePath, riskLevel: "low" }, () =>
+        globWorkspace({ workspacePath, pattern, relativeDir, maxResults, includeDirs })
+      )
+    )
+);
+
+server.tool(
+  "semantic_search",
+  "Semantic-ish code search. Uses embeddings if OPENAI_API_KEY/VOYAGE_API_KEY set; else keyword-overlap fallback.",
+  {
+    workspacePath: workspacePathSchema,
+    query: z.string().describe("Natural language or keyword query"),
+    relativeDir: z.string().optional().describe("Base directory (default .)"),
+    maxResults: z.number().optional().describe("Max results 1-30 (default 8)"),
+    fileGlob: z.string().optional().describe("Filter filenames"),
+  },
+  READ_ONLY,
+  async ({ workspacePath, query, relativeDir, maxResults, fileGlob }) =>
+    jsonText(
+      await withToolLogging("semantic_search", { workspacePath, riskLevel: "low" }, () =>
+        semanticSearch({ workspacePath, query, relativeDir, maxResults, fileGlob })
+      )
+    )
+);
+
+server.tool(
+  "read_binary_file",
+  "Read a binary file as base64 (size-limited, default 5MB).",
+  {
+    workspacePath: workspacePathSchema,
+    relativePath: z.string().describe("Path relative to workspace root"),
+    maxBytes: z.number().optional().describe("Max bytes (default 5242880)"),
+  },
+  READ_ONLY,
+  async ({ workspacePath, relativePath, maxBytes }) =>
+    jsonText(
+      await withToolLogging("read_binary_file", { workspacePath, riskLevel: "low" }, () =>
+        readBinaryFile({ workspacePath, relativePath, maxBytes })
+      )
+    )
+);
+
+server.tool(
+  "file_stats",
+  "Get file/directory metadata: size, mode, created/modified time, isFile/isDirectory.",
+  {
+    workspacePath: workspacePathSchema,
+    relativePath: z.string().describe("Path relative to workspace root"),
+  },
+  READ_ONLY,
+  async ({ workspacePath, relativePath }) =>
+    jsonText(
+      await withToolLogging("file_stats", { workspacePath, riskLevel: "low" }, () =>
+        fileStats({ workspacePath, relativePath })
+      )
+    )
+);
+
+server.tool(
+  "check_js_syntax",
+  "Check syntax of a JS/TS file (node --check for .js/.mjs/.cjs, tsc --noEmit for .ts if installed).",
+  {
+    workspacePath: workspacePathSchema,
+    relativePath: z.string().describe("File to check"),
+    timeoutMs: z.number().optional().describe("Timeout ms (default 30000)"),
+  },
+  READ_ONLY,
+  async ({ workspacePath, relativePath, timeoutMs }) =>
+    jsonText(
+      await withToolLogging("check_js_syntax", { workspacePath, riskLevel: "low" }, () =>
+        checkJsSyntax({ workspacePath, relativePath, timeoutMs })
+      )
+    )
+);
+
+server.tool(
+  "edit_notebook",
+  "Edit a Jupyter .ipynb: replace/insert/delete a cell by index.",
+  {
+    workspacePath: workspacePathSchema,
+    relativePath: z.string().describe(".ipynb path relative to workspace"),
+    operation: z.enum(["replace", "insert", "delete"]).describe("Cell operation"),
+    cellIndex: z.number().describe("0-based cell index"),
+    cellType: z.enum(["code", "markdown"]).optional().describe("Cell type for insert/replace"),
+    source: z.string().optional().describe("Cell source for insert/replace"),
+  },
+  WRITE,
+  async ({ workspacePath, relativePath, operation, cellIndex, cellType, source }) =>
+    jsonText(
+      await withToolLogging("edit_notebook", { workspacePath, riskLevel: "medium" }, () =>
+        editNotebook({ workspacePath, relativePath, operation, cellIndex, cellType, source })
+      )
+    )
+);
+
+server.tool(
+  "todo_read",
+  "Read MCP session todos from .mcp-debug/todos.json (MCP-only, not shown in Cursor UI).",
+  { workspacePath: workspacePathSchema },
+  READ_ONLY,
+  async ({ workspacePath }) =>
+    jsonText(
+      await withToolLogging("todo_read", { workspacePath, riskLevel: "low" }, () =>
+        todoRead({ workspacePath })
+      )
+    )
+);
+
+server.tool(
+  "todo_write",
+  "Write MCP session todos to .mcp-debug/todos.json (MCP-only, not shown in Cursor UI).",
+  {
+    workspacePath: workspacePathSchema,
+    todos: z
+      .array(
+        z.object({
+          id: z.string(),
+          content: z.string(),
+          status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
+        })
+      )
+      .describe("Todo items"),
+    merge: z.boolean().optional().describe("Merge by id instead of replace"),
+  },
+  WRITE,
+  async ({ workspacePath, todos, merge }) =>
+    jsonText(
+      await withToolLogging("todo_write", { workspacePath, riskLevel: "low" }, () =>
+        todoWrite({ workspacePath, todos, merge })
+      )
+    )
+);
+
+server.tool(
   "check_url",
   "Send GET request to a URL with timeout. Limited redirects. Returns status code and response time.",
   {
@@ -290,6 +535,46 @@ server.tool(
     )
 );
 
+server.tool(
+  "http_request",
+  "Full HTTP request: GET/POST/PUT/PATCH/DELETE/HEAD with headers + body. Returns status, headers, body (default 256KB).",
+  {
+    url: z.string().describe("HTTP or HTTPS URL"),
+    method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]).optional().describe("HTTP method (default GET)"),
+    headers: z.record(z.string()).optional().describe("Request headers"),
+    body: z.string().optional().describe("Request body (for POST/PUT/PATCH)"),
+    timeoutMs: z.number().optional().describe("Timeout ms (default 10000)"),
+    maxBodyChars: z.number().optional().describe("Max response body chars (default 262144)"),
+  },
+  NETWORK,
+  async ({ url, method, headers, body, timeoutMs, maxBodyChars }) =>
+    jsonText(
+      await withToolLogging("http_request", { riskLevel: "medium" }, () =>
+        httpRequest({ url, method, headers, body, timeoutMs, maxBodyChars })
+      )
+    )
+);
+
+server.tool(
+  "generate_image",
+  "Generate an image from a prompt via OpenAI or Replicate API. SKIPPED if no API key set.",
+  {
+    workspacePath: workspacePathSchema,
+    prompt: z.string().describe("Image generation prompt"),
+    outputPath: z.string().describe("Output path relative to workspace"),
+    provider: z.enum(["openai", "replicate", "auto"]).optional().describe("Provider (default auto)"),
+    size: z.string().optional().describe("Image size e.g. 1024x1024"),
+    timeoutMs: z.number().optional().describe("Timeout ms (default 120000)"),
+  },
+  NETWORK,
+  async ({ workspacePath, prompt, outputPath, provider, size, timeoutMs }) =>
+    jsonText(
+      await withToolLogging("generate_image", { workspacePath, riskLevel: "medium" }, () =>
+        generateImage({ workspacePath, prompt, outputPath, provider, size, timeoutMs })
+      )
+    )
+);
+
 // ── Write / execute (still guarded) ────────────────────────────────────────
 
 server.tool(
@@ -323,6 +608,77 @@ server.tool(
     jsonText(
       await withToolLogging("delete_workspace_file", { workspacePath, riskLevel: "medium" }, () =>
         deleteWorkspaceFile({ workspacePath, relativePath, recursive })
+      )
+    )
+);
+
+server.tool(
+  "delete_pattern",
+  "Delete files matching a glob pattern (e.g. **/*.bak). dryRun defaults true — returns matched list before deleting.",
+  {
+    workspacePath: workspacePathSchema,
+    pattern: z.string().describe("Glob pattern e.g. **/*.bak"),
+    relativeDir: z.string().optional().describe("Base directory (default .)"),
+    dryRun: z.boolean().optional().describe("Preview only (default true)"),
+    maxDelete: z.number().optional().describe("Safety cap (default 500)"),
+  },
+  WRITE,
+  async ({ workspacePath, pattern, relativeDir, dryRun, maxDelete }) =>
+    jsonText(
+      await withToolLogging("delete_pattern", { workspacePath, riskLevel: "high" }, () =>
+        deletePattern({ workspacePath, pattern, relativeDir, dryRun, maxDelete })
+      )
+    )
+);
+
+server.tool(
+  "copy_workspace_file",
+  "Copy a file or directory within the workspace.",
+  {
+    workspacePath: workspacePathSchema,
+    fromRelativePath: z.string().describe("Source path relative to workspace"),
+    toRelativePath: z.string().describe("Destination path relative to workspace"),
+    overwrite: z.boolean().optional().describe("Overwrite destination (default true)"),
+  },
+  WRITE,
+  async ({ workspacePath, fromRelativePath, toRelativePath, overwrite }) =>
+    jsonText(
+      await withToolLogging("copy_workspace_file", { workspacePath, riskLevel: "medium" }, () =>
+        copyWorkspaceFile({ workspacePath, fromRelativePath, toRelativePath, overwrite })
+      )
+    )
+);
+
+server.tool(
+  "create_directory",
+  "Create a directory (mkdir -p) in the workspace.",
+  {
+    workspacePath: workspacePathSchema,
+    relativePath: z.string().describe("Directory path relative to workspace"),
+  },
+  WRITE,
+  async ({ workspacePath, relativePath }) =>
+    jsonText(
+      await withToolLogging("create_directory", { workspacePath, riskLevel: "low" }, () =>
+        createDirectory({ workspacePath, relativePath })
+      )
+    )
+);
+
+server.tool(
+  "run_format",
+  "Format/auto-fix code via prettier --write or eslint --fix if installed. SKIPPED if no formatter.",
+  {
+    workspacePath: workspacePathSchema,
+    paths: z.array(z.string()).optional().describe("Paths to format (default .)"),
+    formatter: z.enum(["prettier", "eslint", "auto"]).optional().describe("Formatter (default auto)"),
+    timeoutMs: z.number().optional().describe("Timeout ms (default 120000)"),
+  },
+  EXECUTE,
+  async ({ workspacePath, paths, formatter, timeoutMs }) =>
+    jsonText(
+      await withToolLogging("run_format", { workspacePath, riskLevel: "medium" }, () =>
+        runFormat({ workspacePath, paths, formatter, timeoutMs })
       )
     )
 );

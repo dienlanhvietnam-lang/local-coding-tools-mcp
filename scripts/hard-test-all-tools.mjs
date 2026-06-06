@@ -177,6 +177,71 @@ async function runHardTests(client, box) {
   record(results, "git_commit", parseResult(await callToolSafe(client, "git_commit", {
     workspacePath: box, message: "hard-test mcp commit",
   })));
+  record(results, "git_branch", parseResult(await callToolSafe(client, "git_branch", {
+    workspacePath: box,
+  })));
+  record(results, "git_checkout", parseResult(await callToolSafe(client, "git_checkout", {
+    workspacePath: box, branch: "hard-test-branch", create: true,
+  })));
+  record(results, "git_merge", parseResult(await callToolSafe(client, "git_merge", {
+    workspacePath: box, branch: "hard-test-branch",
+  })));
+
+  // ── Phase: FS batch + quality + glob + http + meta ──
+  record(results, "create_directory", parseResult(await callToolSafe(client, "create_directory", {
+    workspacePath: box, relativePath: "made-dir/sub",
+  })));
+  record(results, "write_workspace_file_js", parseResult(await callToolSafe(client, "write_workspace_file", {
+    workspacePath: box, relativePath: "sample.js", content: "const x = 1;\nconsole.log(x);\n",
+  })));
+  record(results, "check_js_syntax", parseResult(await callToolSafe(client, "check_js_syntax", {
+    workspacePath: box, relativePath: "sample.js",
+  })));
+  record(results, "run_format", parseResult(await callToolSafe(client, "run_format", {
+    workspacePath: box, paths: ["sample.js"],
+  })));
+  record(results, "copy_workspace_file", parseResult(await callToolSafe(client, "copy_workspace_file", {
+    workspacePath: box, fromRelativePath: "sample.js", toRelativePath: "made-dir/sample-copy.js",
+  })));
+  record(results, "file_stats", parseResult(await callToolSafe(client, "file_stats", {
+    workspacePath: box, relativePath: "sample.js",
+  })));
+  record(results, "read_binary_file", parseResult(await callToolSafe(client, "read_binary_file", {
+    workspacePath: box, relativePath: "assets/source.png",
+  })));
+  record(results, "glob_workspace", parseResult(await callToolSafe(client, "glob_workspace", {
+    workspacePath: box, pattern: "**/*.js",
+  })));
+  record(results, "write_workspace_file_bak", parseResult(await callToolSafe(client, "write_workspace_file", {
+    workspacePath: box, relativePath: "tmp.bak", content: "x",
+  })));
+  record(results, "delete_pattern", parseResult(await callToolSafe(client, "delete_pattern", {
+    workspacePath: box, pattern: "**/*.bak", dryRun: true,
+  })));
+  record(results, "http_request", parseResult(await callToolSafe(client, "http_request", {
+    url: "https://example.com", method: "GET", timeoutMs: 15000, maxBodyChars: 8192,
+  })));
+  record(results, "semantic_search", parseResult(await callToolSafe(client, "semantic_search", {
+    workspacePath: box, query: "hard test needle", maxResults: 3,
+  })));
+  record(results, "todo_write", parseResult(await callToolSafe(client, "todo_write", {
+    workspacePath: box, todos: [{ id: "t1", content: "hard test todo", status: "pending" }],
+  })));
+  record(results, "todo_read", parseResult(await callToolSafe(client, "todo_read", {
+    workspacePath: box,
+  })));
+  await callToolSafe(client, "write_workspace_file", {
+    workspacePath: box,
+    relativePath: "sample.ipynb",
+    content: JSON.stringify({ cells: [], metadata: {}, nbformat: 4, nbformat_minor: 5 }),
+  });
+  record(results, "edit_notebook", parseResult(await callToolSafe(client, "edit_notebook", {
+    workspacePath: box, relativePath: "sample.ipynb", operation: "insert", cellIndex: 0, cellType: "code", source: "print(1)",
+  })));
+  record(results, "generate_image", parseResult(await callToolSafe(client, "generate_image", {
+    workspacePath: box, prompt: "a red circle", outputPath: "assets/gen.png",
+  })));
+
   record(results, "chrome_load_extension", parseResult(await callToolSafe(client, "chrome_load_extension", {
     workspacePath: box,
     extensionPath: path.join(SERVER_ROOT, "tests", "fixtures", "sample-extension"),

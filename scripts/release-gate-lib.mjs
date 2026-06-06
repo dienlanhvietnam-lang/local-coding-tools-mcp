@@ -6,8 +6,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { EXPECTED_TOOL_COUNT as REGISTRY_TOOL_COUNT } from "./expected-tools.mjs";
 
-export const EXPECTED_TOOL_COUNT = 37;
+export const EXPECTED_TOOL_COUNT = REGISTRY_TOOL_COUNT;
 
 export const FORBIDDEN_PATTERNS = [
   [/node_modules/i, "node_modules"],

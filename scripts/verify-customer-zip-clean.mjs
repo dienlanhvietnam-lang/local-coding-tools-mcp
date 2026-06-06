@@ -169,7 +169,7 @@ if (!fs.existsSync(zipPath)) {
       await client.connect(transport);
       const tools = await client.listTools();
       const count = tools.tools?.length ?? 0;
-      report.toolsList = { status: count === 37 ? "PASS" : "FAIL", count };
+      report.toolsList = { status: count === 56 ? "PASS" : "FAIL", count };
       const rs = parseToolResult(
         await client.callTool({
           name: "run_coding_session",
@@ -182,7 +182,7 @@ if (!fs.existsSync(zipPath)) {
       };
       report.steps.pilotStdio = {
         status:
-          count === 37 && report.run_coding_session.status === "PASS" ? "PASS" : "FAIL",
+          count === 56 && report.run_coding_session.status === "PASS" ? "PASS" : "FAIL",
       };
       await client.close();
       if (report.steps.pilotStdio.status !== "PASS") ok = false;

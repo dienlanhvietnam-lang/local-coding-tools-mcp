@@ -37,7 +37,7 @@ try {
 
   const tools = await client.listTools();
   report.toolCount = tools.tools?.length ?? 0;
-  report.toolsList = report.toolCount >= 37 ? "PASS" : "FAIL";
+  report.toolsList = report.toolCount >= 56 ? "PASS" : "FAIL";
   report.toolNames = tools.tools?.map((t) => t.name);
 
   const cs = parseToolResult(await client.callTool({ name: "check_system", arguments: {} }));

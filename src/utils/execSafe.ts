@@ -303,6 +303,55 @@ export async function runGitCommit(
   });
 }
 
+export async function runGitPush(
+  workspacePath: string,
+  options: { remote?: string; branch?: string; force?: boolean; setUpstream?: boolean } = {}
+): Promise<ExecResult> {
+  const cwd = path.resolve(workspacePath);
+  const args = ["push"];
+  if (options.force) args.push("--force-with-lease");
+  if (options.setUpstream) args.push("--set-upstream");
+  if (options.remote) args.push(options.remote);
+  if (options.branch) args.push(options.branch);
+  return runCommand("git", args, { cwd, timeoutMs: 120_000 });
+}
+
+export async function runGitPull(
+  workspacePath: string,
+  options: { remote?: string; branch?: string } = {}
+): Promise<ExecResult> {
+  const cwd = path.resolve(workspacePath);
+  const args = ["pull"];
+  if (options.remote) args.push(options.remote);
+  if (options.branch) args.push(options.branch);
+  return runCommand("git", args, { cwd, timeoutMs: 120_000 });
+}
+
+export async function runGitBranchList(workspacePath: string): Promise<ExecResult> {
+  const cwd = path.resolve(workspacePath);
+  return runCommand("git", ["branch", "--all", "--no-color"], { cwd, timeoutMs: 30_000 });
+}
+
+export async function runGitBranchCreate(workspacePath: string, branch: string): Promise<ExecResult> {
+  const cwd = path.resolve(workspacePath);
+  return runCommand("git", ["branch", branch], { cwd, timeoutMs: 30_000 });
+}
+
+export async function runGitCheckout(
+  workspacePath: string,
+  branch: string,
+  create: boolean
+): Promise<ExecResult> {
+  const cwd = path.resolve(workspacePath);
+  const args = create ? ["checkout", "-b", branch] : ["checkout", branch];
+  return runCommand("git", args, { cwd, timeoutMs: 60_000 });
+}
+
+export async function runGitMerge(workspacePath: string, branch: string): Promise<ExecResult> {
+  const cwd = path.resolve(workspacePath);
+  return runCommand("git", ["merge", "--no-edit", branch], { cwd, timeoutMs: 60_000 });
+}
+
 export async function detectPackageManager(workspacePath: string): Promise<"npm" | "pnpm"> {
   const cwd = path.resolve(workspacePath);
   try {

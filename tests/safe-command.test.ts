@@ -9,7 +9,7 @@ const ROOT = path.resolve(__dirname, "..");
 
 describe("run_safe_command allowlist", () => {
   it("denies unknown command", () => {
-    const r = validateSafeCommand("curl", ["https://example.com"]);
+    const r = validateSafeCommand("rm", ["-rf", "/"]);
     expect(r.allowed).toBe(false);
   });
 

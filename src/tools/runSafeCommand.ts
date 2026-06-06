@@ -21,6 +21,7 @@ export interface RunSafeCommandOutput {
   stdout?: string;
   stderr?: string;
   truncated?: boolean;
+  hint?: string;
   error?: string;
 }
 
@@ -55,6 +56,7 @@ export async function runSafeCommand(
     stdout: result.stdout,
     stderr: result.stderr,
     truncated: result.truncated,
+    ...(result.hint ? { hint: result.hint } : {}),
   };
 
   if (result.status === "TIMEOUT") {

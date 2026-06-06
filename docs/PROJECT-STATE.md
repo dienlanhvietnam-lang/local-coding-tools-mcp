@@ -9,8 +9,8 @@
 | Field | Value |
 |-------|-------|
 | Package | `local-coding-tools-mcp` |
-| Version | `0.7.0` |
-| MCP tools | **27** |
+| Version | `0.11.0` |
+| MCP tools | **61** |
 | npm publish | **Not released** |
 | winget | **Not released** |
 
@@ -25,7 +25,8 @@
 | 1.2 | Safety hardening |
 | 1.3 | Full Image Dependency Installer R1 |
 | 1.4 | CI + Release Gate R1 |
-| **1.4** | **Repo Structure + Private Git Baseline R1** (this doc) |
+| **1.4** | **Repo Structure + Private Git Baseline R1** |
+| **2.0** | **Context Compression R1** — truncate/chunk-read, cache resources, session bank, token tools (56 -> 61 tools) |
 
 ## Customer pack (latest on disk)
 

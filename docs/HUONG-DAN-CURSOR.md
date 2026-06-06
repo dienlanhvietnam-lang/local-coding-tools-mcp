@@ -59,6 +59,15 @@ Trong Agent chat:
 Dùng MCP local-coding-tools: check_workspace, read_project_info, search_workspace với query "config".
 ```
 
+## Context budget (Composer 2.5 Fast)
+
+Để tiết kiệm token: search trước, đọc theo dòng, dùng cache resource khi output lớn. Chi tiết: [CONTEXT-COMPRESSION.md](./CONTEXT-COMPRESSION.md).
+
+```
+Dùng MCP local-coding-tools theo context budget:
+search_workspace → read_workspace_file (startLine + lineCount theo readHint) → fetch_cached_output nếu có cacheId.
+```
+
 ## Schema tạo ra
 
 `.cursor/mcp.json`:
@@ -69,7 +78,11 @@ Dùng MCP local-coding-tools: check_workspace, read_project_info, search_workspa
     "local-coding-tools": {
       "command": "node",
       "args": ["<ServerRoot>\\dist\\server.js"],
-      "cwd": "<ServerRoot>"
+      "cwd": "<ServerRoot>",
+      "env": {
+        "MCP_MAX_OUTPUT_CHARS": "12000",
+        "MCP_READ_DEFAULT_LINES": "60"
+      }
     }
   }
 }

@@ -1,8 +1,21 @@
 # Local Coding Tools MCP
 
-**v0.10.0** — MCP stdio server: **coding + image editing** cho Cursor / VS Code.
+**v0.11.0** — MCP stdio server: **coding + image editing** cho Cursor / VS Code.
 
-**56 tools** | npm publish ready | winget template included
+**61 tools** | npm publish ready | winget template included
+
+## Context compression (v0.11.0)
+
+Pipeline nén context kiểu Cursor: search trước, đọc theo dòng, cache resource khi output lớn. Xem **[docs/CONTEXT-COMPRESSION.md](docs/CONTEXT-COMPRESSION.md)**.
+
+| Nhóm | Tools |
+|------|-------|
+| Chunk read | `read_workspace_file` (`startLine`/`lineCount`/`stripContext`) |
+| Cache resource | `fetch_cached_output` + resource `mcp-cache://{id}` |
+| Session bank | `get_session_context`, `clear_session_context` |
+| Token budget | `estimate_tool_output`, `summarize_tool_history` |
+
+Env tinh chỉnh: `MCP_MAX_OUTPUT_CHARS`, `MCP_READ_DEFAULT_LINES`, `MCP_READ_MAX_LINES`, `MCP_CACHE_MAX_BYTES`, `MCP_CACHE_TTL_MS`.
 
 ## Tools moi v0.10.0 (37 -> 56)
 
@@ -91,9 +104,11 @@ See **[docs/HUONG-DAN-FULL-IMAGE.md](docs/HUONG-DAN-FULL-IMAGE.md)**.
 | `cli` / `auto` | [realesrgan-ncnn-vulkan](https://github.com/xinntao/Real-ESRGAN-ncnn-vulkan) on PATH |
 | `api` / `auto` | Replicate Real-ESRGAN — env `REPLICATE_API_TOKEN` |
 
-## Coding tools (23)
+## Coding tools (28)
 
 **Audit / read:** `run_coding_session`, `check_system`, `check_workspace`, `read_project_info`, `list_scripts`, `read_workspace_file`, `search_workspace`, `list_workspace_tree`, `read_lints`, `git_status`, `check_url`, `fetch_url`, `search_web`, `collect_debug_bundle`
+
+**Context budget:** `fetch_cached_output`, `get_session_context`, `clear_session_context`, `estimate_tool_output`, `summarize_tool_history`
 
 **Write / FS:** `apply_patch`, `write_workspace_file`, `delete_workspace_file`, `move_workspace_file`
 

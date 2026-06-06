@@ -15,7 +15,11 @@ export interface SearchMatch {
   file: string;
   line: number;
   text: string;
+  contextLines?: string;
+  readHint?: string;
 }
+
+const CONTEXT_READ_LINES = 40;
 
 export interface SearchWorkspaceOutput {
   status: "PASS" | "FAIL";
@@ -86,10 +90,16 @@ function walkAndSearch(
               return;
             }
             if (regex.test(lines[i]!)) {
+              const ctxStart = Math.max(0, i - 1);
+              const ctxEnd = Math.min(lines.length, i + 2);
+              const lineNo = i + 1;
+              const readStart = Math.max(1, lineNo - 5);
               matches.push({
                 file: rel,
-                line: i + 1,
+                line: lineNo,
                 text: lines[i]!.trim().slice(0, 500),
+                contextLines: lines.slice(ctxStart, ctxEnd).join("\n").slice(0, 500),
+                readHint: `read_workspace_file startLine=${readStart} lineCount=${CONTEXT_READ_LINES}`,
               });
             }
           }

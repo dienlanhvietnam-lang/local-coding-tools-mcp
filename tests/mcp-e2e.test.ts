@@ -133,4 +133,35 @@ describe("MCP E2E (stdio client — simulates Cursor/VS Code)", () => {
     const data = parseResult(raw);
     expect(["PASS", "SKIPPED", "FAIL"]).toContain(data.status);
   });
+
+  it("read_workspace_file supports startLine + lineCount", async () => {
+    const raw = await client.callTool({
+      name: "read_workspace_file",
+      arguments: { workspacePath: FIXTURE, relativePath: "package.json", startLine: 1, lineCount: 2 },
+    });
+    const data = parseResult(raw);
+    expect(data.status).toBe("PASS");
+    expect(data.startLine).toBe(1);
+    expect(data.endLine).toBe(2);
+  });
+
+  it("exposes the cached-output resource template", async () => {
+    const templates = await client.listResourceTemplates();
+    const found = templates.resourceTemplates.some((t) =>
+      t.uriTemplate.includes("mcp-cache://")
+    );
+    expect(found).toBe(true);
+  });
+
+  it("fetch_cached_output fails gracefully for unknown id", async () => {
+    const raw = await client.callTool({
+      name: "fetch_cached_output",
+      arguments: {
+        workspacePath: FIXTURE,
+        cacheId: "00000000-0000-0000-0000-000000000000",
+      },
+    });
+    const data = parseResult(raw);
+    expect(data.status).toBe("FAIL");
+  });
 });

@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const SERVER_NAME = "local-coding-tools-mcp";
-export const SERVER_VERSION = "0.10.0";
+export const SERVER_VERSION = "0.11.0";
 
 /** Max image file size for read/process (50 MB) */
 export const MAX_IMAGE_BYTES = 50 * 1024 * 1024;
@@ -23,7 +23,29 @@ export const TOOL_CALL_LOG_PATH = path.join(PROJECT_ROOT, "logs", "mcp-tool-call
 
 export const DEFAULT_SCRIPT_TIMEOUT_MS = 120_000;
 export const DEFAULT_URL_TIMEOUT_MS = 10_000;
-export const MAX_OUTPUT_CHARS = 20_000;
+
+function envInt(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+/** Max characters returned by a single tool before truncation kicks in. */
+export const MAX_OUTPUT_CHARS = envInt("MCP_MAX_OUTPUT_CHARS", 20_000);
+
+/** Default number of lines returned by line-range reads. */
+export const READ_DEFAULT_LINES = envInt("MCP_READ_DEFAULT_LINES", 80);
+
+/** Hard cap on lines returned by a single line-range read. */
+export const READ_MAX_LINES = envInt("MCP_READ_MAX_LINES", 200);
+
+/** Payload size (bytes) above which a tool result is moved to the cache store. */
+export const CACHE_MAX_BYTES = envInt("MCP_CACHE_MAX_BYTES", 524_288);
+
+/** Time-to-live (ms) for cached tool outputs under .mcp-debug/cache/. */
+export const CACHE_TTL_MS = envInt("MCP_CACHE_TTL_MS", 3_600_000);
+
 export const MAX_REDIRECTS = 3;
 
 /** Sensitive filenames never copied into debug bundles */

@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { MAX_OUTPUT_CHARS } from "../config.js";
 import { logRuntimeEvent, tailText } from "./runtimeLog.js";
+import { truncateStructured } from "./truncateStructured.js";
 
 const SHELL_METACHAR_RE = /[;&|`$()<>]/;
 
@@ -59,6 +60,7 @@ export interface ExecResult {
   stdout: string;
   stderr: string;
   truncated: boolean;
+  hint?: string;
 }
 
 export interface ExecOptions {
@@ -72,14 +74,12 @@ export interface ExecOptions {
 function truncateOutput(
   text: string,
   maxChars: number
-): { text: string; truncated: boolean } {
-  if (text.length <= maxChars) {
-    return { text, truncated: false };
-  }
-  return {
-    text: text.slice(0, maxChars) + `\n...[truncated ${text.length - maxChars} chars]`,
-    truncated: true,
-  };
+): { text: string; truncated: boolean; hint?: string } {
+  const result = truncateStructured(text, maxChars, {
+    mode: "head_tail",
+    hint: "Command output truncated. Re-run with a narrower command, add flags to reduce output, or pipe through a filter.",
+  });
+  return { text: result.text, truncated: result.truncated, hint: result.hint };
 }
 
 function resolveSpawnTarget(
@@ -210,6 +210,7 @@ export function runCommand(
         stdout: out.text,
         stderr: err.text,
         truncated: out.truncated || err.truncated,
+        hint: out.hint ?? err.hint,
       });
     });
 

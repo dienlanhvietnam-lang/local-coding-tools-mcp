@@ -15,6 +15,9 @@ export interface SemanticHit {
   file: string;
   score: number;
   snippet: string;
+  startLine?: number;
+  endLine?: number;
+  readHint?: string;
 }
 
 export interface SemanticSearchOutput {
@@ -110,7 +113,17 @@ export async function semanticSearch(input: SemanticSearchInput): Promise<Semant
       const lines = content.split("\n");
       const start = Math.max(0, firstLineIdx);
       const snippet = lines.slice(start, start + 3).join("\n").slice(0, 240);
-      hits.push({ file: path.relative(workspacePath, abs).replace(/\\/g, "/"), score, snippet });
+      const startLine = start + 1;
+      const endLine = Math.min(lines.length, start + 3);
+      const readStart = Math.max(1, startLine - 5);
+      hits.push({
+        file: path.relative(workspacePath, abs).replace(/\\/g, "/"),
+        score,
+        snippet,
+        startLine,
+        endLine,
+        readHint: `read_workspace_file startLine=${readStart} lineCount=40`,
+      });
     }
 
     hits.sort((a, b) => b.score - a.score);

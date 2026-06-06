@@ -4,6 +4,16 @@ export interface ToolMeta {
   riskLevel: "low" | "medium" | "high";
 }
 
+/**
+ * Shared shape attached to tool results when output is reduced, so the model
+ * always knows whether content was cut and how to retrieve the rest.
+ */
+export interface CompressionMeta {
+  truncated?: boolean;
+  originalChars?: number;
+  hint?: string;
+}
+
 export function pass<T extends Record<string, unknown>>(data: T): T & { status: "PASS" } {
   return { status: "PASS", ...data };
 }

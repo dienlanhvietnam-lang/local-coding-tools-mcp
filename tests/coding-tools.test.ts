@@ -25,12 +25,37 @@ describe("readWorkspaceFile", () => {
     const r = await readWorkspaceFile({ workspacePath: FIXTURE, relativePath: "package.json" });
     expect(r.status).toBe("PASS");
     expect(r.content).toContain("fixture-test-project");
+    expect(r.totalLines).toBeGreaterThan(0);
   });
 
   it("returns raw .env content", async () => {
     const r = await readWorkspaceFile({ workspacePath: FIXTURE, relativePath: ".env" });
     expect(r.status).toBe("PASS");
     expect(r.content).toContain("SECRET=leak");
+  });
+
+  it("reads a line range with startLine + lineCount", async () => {
+    const r = await readWorkspaceFile({
+      workspacePath: FIXTURE,
+      relativePath: "package.json",
+      startLine: 1,
+      lineCount: 3,
+    });
+    expect(r.status).toBe("PASS");
+    expect(r.startLine).toBe(1);
+    expect(r.endLine).toBe(3);
+    expect(r.content!.split("\n").length).toBe(3);
+  });
+
+  it("fails clearly when startLine exceeds file length", async () => {
+    const r = await readWorkspaceFile({
+      workspacePath: FIXTURE,
+      relativePath: "package.json",
+      startLine: 100000,
+      lineCount: 5,
+    });
+    expect(r.status).toBe("FAIL");
+    expect(r.error).toContain("exceeds file length");
   });
 });
 
@@ -65,6 +90,16 @@ describe("searchWorkspace", () => {
     });
     expect(r.status).toBe("PASS");
     expect(r.count).toBeGreaterThan(0);
+  });
+
+  it("attaches a readHint to each match", async () => {
+    const r = await searchWorkspace({
+      workspacePath: FIXTURE,
+      pattern: "fixture-test-project",
+    });
+    expect(r.status).toBe("PASS");
+    expect(r.matches![0]!.readHint).toContain("read_workspace_file startLine=");
+    expect(r.matches![0]!.contextLines).toBeTruthy();
   });
 });
 

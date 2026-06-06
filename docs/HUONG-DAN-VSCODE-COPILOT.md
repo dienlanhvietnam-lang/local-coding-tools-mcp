@@ -1,6 +1,6 @@
 # Hướng dẫn VS Code + Copilot MCP
 
-**local-coding-tools-mcp** v0.7.0 — 26+ tools (coding + image).
+**local-coding-tools-mcp** v0.11.0 — 61 tools (coding + image + context compression).
 
 ## Yêu cầu
 
@@ -78,6 +78,19 @@ powershell -ExecutionPolicy Bypass -File scripts\test-mcp-install.ps1 `
 | Build/test | `Dùng run_project_script chạy script test` |
 | Audit | `Dùng run_coding_session cho workspace hiện tại` |
 | Git | `Gọi git_status` |
+
+## Context budget (tiết kiệm token)
+
+Server đặt sẵn `env` trong `.vscode/mcp.json` (`MCP_MAX_OUTPUT_CHARS=12000`, `MCP_READ_DEFAULT_LINES=60`) để output gọn cho Copilot. Workflow khuyến nghị: search trước, đọc theo dòng, dùng cache resource khi output lớn. Chi tiết: [CONTEXT-COMPRESSION.md](./CONTEXT-COMPRESSION.md).
+
+| Mục đích | Prompt |
+|----------|--------|
+| Search trước | `Dùng search_workspace tìm "config", rồi read_workspace_file theo readHint (startLine + lineCount)` |
+| Output lớn | `Nếu kết quả có cacheId, dùng fetch_cached_output để đọc đầy đủ` |
+| Tiếp tục việc | `Gọi get_session_context để xem search/read gần đây` |
+| Ước token | `Gọi estimate_tool_output trước khi đọc file lớn` |
+
+Tinh chỉnh thêm bằng env: `MCP_READ_MAX_LINES`, `MCP_CACHE_MAX_BYTES`, `MCP_CACHE_TTL_MS`.
 
 ## Khắc phục
 

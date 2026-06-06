@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { SERVER_NAME, SERVER_VERSION } from "./config.js";
@@ -56,10 +56,16 @@ import { imageRounded } from "./tools/imageRounded.js";
 import { imageUpscale } from "./tools/imageUpscale.js";
 import { imageUpscaleAi } from "./tools/imageUpscaleAi.js";
 import { checkImageDependencies } from "./tools/checkImageDependencies.js";
+import { fetchCachedOutput } from "./tools/fetchCachedOutput.js";
+import { listCacheEntries, parseCacheId, readCache, CACHE_URI_SCHEME } from "./cache/outputCache.js";
+import { maybeCache } from "./utils/maybeCache.js";
+import { getSessionContext, clearSessionContext } from "./tools/sessionContext.js";
+import { estimateToolOutput } from "./tools/estimateToolOutput.js";
+import { summarizeToolHistory } from "./tools/summarizeToolHistory.js";
 
 function jsonText(data: unknown): { content: Array<{ type: "text"; text: string }> } {
   return {
-    content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+    content: [{ type: "text", text: JSON.stringify(data) }],
   };
 }
 
@@ -67,10 +73,22 @@ const workspacePathSchema = z
   .string()
   .describe("Absolute path to the project workspace");
 
-const server = new McpServer({
-  name: SERVER_NAME,
-  version: SERVER_VERSION,
-});
+const server = new McpServer(
+  {
+    name: SERVER_NAME,
+    version: SERVER_VERSION,
+  },
+  {
+    instructions: [
+      "Context budget rules for local-coding-tools:",
+      "1. Run search_workspace or semantic_search BEFORE read_workspace_file.",
+      "2. Use read_workspace_file with startLine + lineCount; avoid reading whole files over ~200 lines.",
+      "3. If a result has truncated:true or a cacheId/cacheUri, use fetch_cached_output (or the mcp-cache:// resource) instead of re-running the tool.",
+      "4. Call get_session_context when resuming work to avoid repeating searches/reads.",
+      "5. Call estimate_tool_output before large reads to decide on a line range.",
+    ].join("\n"),
+  }
+);
 
 server.tool(
   "run_coding_session",
@@ -288,17 +306,20 @@ server.tool(
 
 server.tool(
   "read_workspace_file",
-  "Read a text file (any path relative or absolute).",
+  "Read a text file. Prefer after search_workspace/semantic_search. Use startLine+lineCount for partial reads; read full files only when small.",
   {
     workspacePath: workspacePathSchema,
     relativePath: z.string().describe("Path relative to workspace root"),
     maxChars: z.number().optional().describe("Max characters to return"),
+    startLine: z.number().optional().describe("First line to read (1-based). Enables line-range mode."),
+    lineCount: z.number().optional().describe("Number of lines to read from startLine (default 80, capped)"),
+    stripContext: z.boolean().optional().describe("Strip XML-like context blocks (rules, git_status, instructions) — useful for transcripts"),
   },
   READ_ONLY,
-  async ({ workspacePath, relativePath, maxChars }) =>
+  async ({ workspacePath, relativePath, maxChars, startLine, lineCount, stripContext }) =>
     jsonText(
       await withToolLogging("read_workspace_file", { workspacePath, riskLevel: "low" }, () =>
-        readWorkspaceFile({ workspacePath, relativePath, maxChars })
+        readWorkspaceFile({ workspacePath, relativePath, maxChars, startLine, lineCount, stripContext })
       )
     )
 );
@@ -549,8 +570,12 @@ server.tool(
   NETWORK,
   async ({ url, method, headers, body, timeoutMs, maxBodyChars }) =>
     jsonText(
-      await withToolLogging("http_request", { riskLevel: "medium" }, () =>
-        httpRequest({ url, method, headers, body, timeoutMs, maxBodyChars })
+      maybeCache(
+        undefined,
+        "http_request",
+        await withToolLogging("http_request", { riskLevel: "medium" }, () =>
+          httpRequest({ url, method, headers, body, timeoutMs, maxBodyChars })
+        )
       )
     )
 );
@@ -731,8 +756,12 @@ server.tool(
   EXECUTE,
   async ({ workspacePath, command, args, timeoutMs }) =>
     jsonText(
-      await withToolLogging("run_safe_command", { workspacePath, riskLevel: "medium" }, () =>
-        runSafeCommand({ workspacePath, command, args, timeoutMs })
+      maybeCache(
+        workspacePath,
+        "run_safe_command",
+        await withToolLogging("run_safe_command", { workspacePath, riskLevel: "medium" }, () =>
+          runSafeCommand({ workspacePath, command, args, timeoutMs })
+        )
       )
     )
 );
@@ -761,8 +790,12 @@ server.tool(
   { ...EXECUTE, idempotentHint: true },
   async ({ workspacePath }) =>
     jsonText(
-      await withToolLogging("collect_debug_bundle", { workspacePath, riskLevel: "medium" }, () =>
-        collectDebugBundle({ workspacePath })
+      maybeCache(
+        workspacePath,
+        "collect_debug_bundle",
+        await withToolLogging("collect_debug_bundle", { workspacePath, riskLevel: "medium" }, () =>
+          collectDebugBundle({ workspacePath })
+        )
       )
     )
 );
@@ -778,8 +811,12 @@ server.tool(
   READ_ONLY,
   async ({ workspacePath, projectSubdir, timeoutMs }) =>
     jsonText(
-      await withToolLogging("read_lints", { workspacePath, riskLevel: "low" }, () =>
-        readLints({ workspacePath, projectSubdir, timeoutMs })
+      maybeCache(
+        workspacePath,
+        "read_lints",
+        await withToolLogging("read_lints", { workspacePath, riskLevel: "low" }, () =>
+          readLints({ workspacePath, projectSubdir, timeoutMs })
+        )
       )
     )
 );
@@ -1093,6 +1130,111 @@ server.tool(
         imageUpscaleAi(args)
       )
     )
+);
+
+server.tool(
+  "fetch_cached_output",
+  "Read the full output of a previous tool call that was stored as a cache resource (returned cacheId). Use when the inline preview was not enough.",
+  {
+    workspacePath: workspacePathSchema,
+    cacheId: z.string().describe("cacheId returned by a tool whose output was cached"),
+    maxChars: z.number().optional().describe("Max characters to return"),
+  },
+  READ_ONLY,
+  async ({ workspacePath, cacheId, maxChars }) =>
+    jsonText(
+      await withToolLogging("fetch_cached_output", { workspacePath, riskLevel: "low" }, () =>
+        fetchCachedOutput({ workspacePath, cacheId, maxChars })
+      )
+    )
+);
+
+server.tool(
+  "get_session_context",
+  "Return the MCP session context bank (recent searches, recent file reads, cached output refs) so you can avoid redundant work. Read-only.",
+  { workspacePath: workspacePathSchema },
+  READ_ONLY,
+  async ({ workspacePath }) =>
+    jsonText(
+      await withToolLogging("get_session_context", { workspacePath, riskLevel: "low" }, () =>
+        getSessionContext({ workspacePath })
+      )
+    )
+);
+
+server.tool(
+  "clear_session_context",
+  "Clear the MCP session context bank for the workspace (use when switching to an unrelated task).",
+  { workspacePath: workspacePathSchema },
+  WRITE,
+  async ({ workspacePath }) =>
+    jsonText(
+      await withToolLogging("clear_session_context", { workspacePath, riskLevel: "low" }, () =>
+        clearSessionContext({ workspacePath })
+      )
+    )
+);
+
+server.tool(
+  "estimate_tool_output",
+  "Estimate the token/character cost of a tool before calling it (currently read_workspace_file). Use to decide whether to use a line range. Read-only.",
+  {
+    workspacePath: workspacePathSchema,
+    toolName: z.string().describe("Tool to estimate, e.g. read_workspace_file"),
+    relativePath: z.string().optional().describe("File path (required for read_workspace_file)"),
+  },
+  READ_ONLY,
+  async ({ workspacePath, toolName, relativePath }) =>
+    jsonText(
+      await withToolLogging("estimate_tool_output", { workspacePath, riskLevel: "low" }, () =>
+        estimateToolOutput({ workspacePath, toolName, relativePath })
+      )
+    )
+);
+
+server.tool(
+  "summarize_tool_history",
+  "Summarize recent MCP tool calls (status, duration, cache refs) without resending full outputs. Read-only.",
+  {
+    workspacePath: workspacePathSchema,
+    limit: z.number().optional().describe("How many recent calls to summarize (default 20)"),
+  },
+  READ_ONLY,
+  async ({ workspacePath, limit }) =>
+    jsonText(
+      await withToolLogging("summarize_tool_history", { workspacePath, riskLevel: "low" }, () =>
+        summarizeToolHistory({ workspacePath, limit })
+      )
+    )
+);
+
+server.resource(
+  "cached-output",
+  new ResourceTemplate(`${CACHE_URI_SCHEME}://{id}`, {
+    list: () => ({
+      resources: listCacheEntries().map((entry) => ({
+        uri: entry.uri,
+        name: `${entry.toolName} output (${entry.originalChars} chars)`,
+        mimeType: entry.mimeType,
+      })),
+    }),
+  }),
+  async (uri) => {
+    const id = parseCacheId(uri.href);
+    const entry = id ? readCache(id) : null;
+    if (!entry) {
+      throw new Error(`Cache resource not found: ${uri.href}`);
+    }
+    return {
+      contents: [
+        {
+          uri: uri.href,
+          mimeType: entry.meta.mimeType,
+          text: entry.content,
+        },
+      ],
+    };
+  }
 );
 
 function logFatalToStderr(label: string, err: unknown): void {

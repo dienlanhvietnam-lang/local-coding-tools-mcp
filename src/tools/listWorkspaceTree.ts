@@ -22,6 +22,7 @@ export interface ListWorkspaceTreeOutput {
   entries?: TreeEntry[];
   count?: number;
   truncated?: boolean;
+  hint?: string;
   error?: string;
 }
 
@@ -97,6 +98,11 @@ export async function listWorkspaceTree(
       entries,
       count: entries.length,
       truncated,
+      ...(truncated
+        ? {
+            hint: `Tree capped at ${maxEntries} entries / depth ${maxDepth}. Narrow with relativeDir or raise maxEntries/maxDepth.`,
+          }
+        : {}),
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

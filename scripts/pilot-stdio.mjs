@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { EXPECTED_TOOL_COUNT } from "./expected-tools.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -37,7 +38,7 @@ try {
 
   const tools = await client.listTools();
   report.toolCount = tools.tools?.length ?? 0;
-  report.toolsList = report.toolCount >= 56 ? "PASS" : "FAIL";
+  report.toolsList = report.toolCount >= EXPECTED_TOOL_COUNT ? "PASS" : "FAIL";
   report.toolNames = tools.tools?.map((t) => t.name);
 
   const cs = parseToolResult(await client.callTool({ name: "check_system", arguments: {} }));

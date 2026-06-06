@@ -1,4 +1,5 @@
 import { DEFAULT_URL_TIMEOUT_MS, MAX_REDIRECTS } from "../config.js";
+import { truncateStructured } from "./truncateStructured.js";
 
 export interface FetchUrlResult {
   finalUrl: string;
@@ -6,6 +7,7 @@ export interface FetchUrlResult {
   contentType: string | null;
   body: string;
   bodyTruncated: boolean;
+  hint?: string;
   durationMs: number;
   redirectCount: number;
 }
@@ -97,15 +99,13 @@ export async function fetchHttpGet(
 async function readBodyText(
   response: Response,
   maxBodyChars: number
-): Promise<{ body: string; bodyTruncated: boolean }> {
+): Promise<{ body: string; bodyTruncated: boolean; hint?: string }> {
   const raw = await response.text();
-  if (raw.length <= maxBodyChars) {
-    return { body: raw, bodyTruncated: false };
-  }
-  return {
-    body: raw.slice(0, maxBodyChars) + `\n...[truncated ${raw.length - maxBodyChars} chars]`,
-    bodyTruncated: true,
-  };
+  const result = truncateStructured(raw, maxBodyChars, {
+    mode: "head_tail",
+    hint: "Response body truncated. Request a narrower resource or use range/query parameters to reduce size.",
+  });
+  return { body: result.text, bodyTruncated: result.truncated, hint: result.hint };
 }
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD";
@@ -117,6 +117,7 @@ export interface HttpRequestResult {
   headers: Record<string, string>;
   body: string;
   bodyTruncated: boolean;
+  hint?: string;
   durationMs: number;
 }
 

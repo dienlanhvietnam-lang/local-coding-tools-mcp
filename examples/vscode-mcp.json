@@ -6,7 +6,11 @@
       "args": [
         "E:\\MCP\\local-coding-tools-mcp\\dist\\server.js"
       ],
-      "cwd": "E:\\MCP\\local-coding-tools-mcp"
+      "cwd": "E:\\MCP\\local-coding-tools-mcp",
+      "env": {
+        "MCP_MAX_OUTPUT_CHARS": "12000",
+        "MCP_READ_DEFAULT_LINES": "60"
+      }
     }
   }
 }

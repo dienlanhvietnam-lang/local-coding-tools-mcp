@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { runCli } from "./run-cli.mjs";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { EXPECTED_TOOL_COUNT } from "./expected-tools.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -169,7 +170,7 @@ if (!fs.existsSync(zipPath)) {
       await client.connect(transport);
       const tools = await client.listTools();
       const count = tools.tools?.length ?? 0;
-      report.toolsList = { status: count === 56 ? "PASS" : "FAIL", count };
+      report.toolsList = { status: count === EXPECTED_TOOL_COUNT ? "PASS" : "FAIL", count };
       const rs = parseToolResult(
         await client.callTool({
           name: "run_coding_session",
@@ -182,7 +183,9 @@ if (!fs.existsSync(zipPath)) {
       };
       report.steps.pilotStdio = {
         status:
-          count === 56 && report.run_coding_session.status === "PASS" ? "PASS" : "FAIL",
+          count === EXPECTED_TOOL_COUNT && report.run_coding_session.status === "PASS"
+            ? "PASS"
+            : "FAIL",
       };
       await client.close();
       if (report.steps.pilotStdio.status !== "PASS") ok = false;

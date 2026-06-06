@@ -70,7 +70,11 @@ $mcpJson = @"
       "args": [
         "$serverJsJson"
       ],
-      "cwd": "$serverRootJson"
+      "cwd": "$serverRootJson",
+      "env": {
+        "MCP_MAX_OUTPUT_CHARS": "12000",
+        "MCP_READ_DEFAULT_LINES": "60"
+      }
     }
   }
 }

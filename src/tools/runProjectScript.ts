@@ -27,6 +27,7 @@ export interface RunProjectScriptOutput {
   stderr?: string;
   timedOut?: boolean;
   truncated?: boolean;
+  hint?: string;
   error?: string;
 }
 
@@ -70,6 +71,7 @@ export async function runProjectScript(
     stderr: result.stderr,
     timedOut,
     truncated: result.truncated,
+    ...(result.hint ? { hint: result.hint } : {}),
   };
 
   if (timedOut) {

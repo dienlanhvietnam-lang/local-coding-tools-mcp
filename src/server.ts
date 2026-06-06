@@ -509,27 +509,31 @@ server.tool(
 
 server.tool(
   "check_url",
-  "Send GET request to a URL with timeout. Limited redirects. Returns status code and response time.",
+  "GET probe — status, timing, redirects, response headers (no body). Lightweight health check.",
   {
     url: z.string().describe("HTTP or HTTPS URL to check"),
     timeoutMs: z.number().optional().describe("Timeout in ms (default 10000)"),
+    includeAllHeaders: z
+      .boolean()
+      .optional()
+      .describe("Return all response headers (default false — safe subset only)"),
   },
   NETWORK,
-  async ({ url, timeoutMs }) =>
+  async ({ url, timeoutMs, includeAllHeaders }) =>
     jsonText(
       await withToolLogging("check_url", { riskLevel: "low" }, () =>
-        checkUrl({ url, timeoutMs })
+        checkUrl({ url, timeoutMs, includeAllHeaders })
       )
     )
 );
 
 server.tool(
   "fetch_url",
-  "HTTP GET with response body (truncated by default 64KB). Returns status, content-type, body.",
+  "HTTP GET with response body (truncated by default 256KB). Returns status, headers, content-type, body.",
   {
     url: z.string().describe("HTTP or HTTPS URL to fetch"),
     timeoutMs: z.number().optional().describe("Timeout in ms (default 10000)"),
-    maxBodyChars: z.number().optional().describe("Max body chars (default 65536)"),
+    maxBodyChars: z.number().optional().describe("Max body chars (default 262144)"),
   },
   NETWORK,
   async ({ url, timeoutMs, maxBodyChars }) =>
@@ -773,12 +777,21 @@ server.tool(
     workspacePath: workspacePathSchema,
     extensionPath: z.string().describe("Path to unpacked extension folder with manifest.json"),
     chromePath: z.string().optional().describe("Optional path to chrome.exe or msedge.exe"),
+    prefer: z
+      .enum(["chrome", "edge", "any"])
+      .optional()
+      .describe("Browser preference when auto-detecting (default chrome)"),
+    startUrl: z.string().optional().describe("Optional URL to open in a new tab after load"),
+    reuseProfile: z
+      .boolean()
+      .optional()
+      .describe("Reuse fixed .mcp-debug/chrome-profile instead of timestamped run dir"),
   },
   EXECUTE,
-  async ({ workspacePath, extensionPath, chromePath }) =>
+  async ({ workspacePath, extensionPath, chromePath, prefer, startUrl, reuseProfile }) =>
     jsonText(
       await withToolLogging("chrome_load_extension", { workspacePath, riskLevel: "high" }, () =>
-        chromeLoadExtension({ workspacePath, extensionPath, chromePath })
+        chromeLoadExtension({ workspacePath, extensionPath, chromePath, prefer, startUrl, reuseProfile })
       )
     )
 );

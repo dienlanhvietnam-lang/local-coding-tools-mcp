@@ -23,6 +23,7 @@ export interface HttpRequestOutput {
   headers?: Record<string, string>;
   body?: string;
   bodyTruncated?: boolean;
+  hint?: string;
   durationMs?: number;
   privateHost?: boolean;
   error?: string;
@@ -59,6 +60,7 @@ export async function httpRequest(input: HttpRequestInput): Promise<HttpRequestO
       headers: result.headers,
       body: redactSecrets(result.body),
       bodyTruncated: result.bodyTruncated,
+      hint: result.hint,
       durationMs: result.durationMs,
       privateHost,
     };

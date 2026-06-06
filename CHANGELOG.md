@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.11.1 — HTTP / Chrome tools patch
+
+Nâng cấp 3 tool có sẵn (61 tools, không thêm tool mới).
+
+- **HTTP layer dùng chung:** `probeHttpGet()`, `httpUserAgent()` từ `SERVER_VERSION`, `DEFAULT_FETCH_MAX_BODY` (256KB).
+- **`check_url`:** delegate `probeHttpGet`; thêm `finalUrl`, `contentType`, `headers`, `privateHost`; option `includeAllHeaders`.
+- **`fetch_url`:** default body 256KB; thêm `headers`, `hint`, `privateHost`.
+- **`chrome_load_extension`:** `resolveBrowserExecutable` (prefer chrome, Win/mac/Linux paths), `--disable-extensions-except`, profile `run-<timestamp>`, options `prefer`/`startUrl`/`reuseProfile`.
+- Tests: `check-url.test.ts`, mở rộng `fetch-url` / `chrome-load` / `http-request`.
+
 ## v0.11.0 — Context Compression
 
 Pipeline nén context kiểu Cursor để giảm token mỗi tool call (56 -> 61 tools).

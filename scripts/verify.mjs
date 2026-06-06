@@ -106,8 +106,8 @@ for (const rel of required) {
   }
 }
 
-if (pkg.version !== "0.11.0") {
-  console.error(`✗ expected version 0.11.0, got ${pkg.version}`);
+if (pkg.version !== "0.11.1") {
+  console.error(`✗ expected version 0.11.1, got ${pkg.version}`);
   ok = false;
 } else {
   console.log(`✓ package.json version ${pkg.version}`);
@@ -245,5 +245,5 @@ if (!ok) {
 }
 const label = isCustomerPack
   ? "Verify PASSED (customer pack)"
-  : "Verify PASSED (v0.11.0 + customer install pack)";
+  : "Verify PASSED (v0.11.1 + customer install pack)";
 console.log(`\n${label}`);

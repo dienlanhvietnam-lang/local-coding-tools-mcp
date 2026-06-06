@@ -1,6 +1,6 @@
 # Local Coding Tools MCP
 
-**v0.11.0** — MCP stdio server: **coding + image editing** cho Cursor / VS Code.
+**v0.11.1** — MCP stdio server: **coding + image editing** cho Cursor / VS Code.
 
 **61 tools** | npm publish ready | winget template included
 
@@ -16,6 +16,16 @@ Pipeline nén context kiểu Cursor: search trước, đọc theo dòng, cache r
 | Token budget | `estimate_tool_output`, `summarize_tool_history` |
 
 Env tinh chỉnh: `MCP_MAX_OUTPUT_CHARS`, `MCP_READ_DEFAULT_LINES`, `MCP_READ_MAX_LINES`, `MCP_CACHE_MAX_BYTES`, `MCP_CACHE_TTL_MS`.
+
+## HTTP tools (v0.11.1)
+
+| Tool | Dùng khi | Output chính |
+|------|----------|--------------|
+| `check_url` | Health check nhanh, không cần body | status, timing, redirects, headers (subset) |
+| `fetch_url` | GET đơn giản + body (default 256KB) | status, headers, body, `hint` khi truncate |
+| `http_request` | REST đầy đủ (method/header/body) | status, headers, body tùy method |
+
+`chrome_load_extension`: sideload unpacked extension; mặc định ưu tiên Chrome, profile `run-<timestamp>`. Ví dụ: `{ prefer: "chrome", extensionPath: "my-ext" }`.
 
 ## Tools moi v0.10.0 (37 -> 56)
 

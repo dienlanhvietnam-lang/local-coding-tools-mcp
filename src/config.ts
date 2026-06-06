@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const SERVER_NAME = "local-coding-tools-mcp";
-export const SERVER_VERSION = "0.11.0";
+export const SERVER_VERSION = "0.11.1";
 
 /** Max image file size for read/process (50 MB) */
 export const MAX_IMAGE_BYTES = 50 * 1024 * 1024;
@@ -47,6 +47,22 @@ export const CACHE_MAX_BYTES = envInt("MCP_CACHE_MAX_BYTES", 524_288);
 export const CACHE_TTL_MS = envInt("MCP_CACHE_TTL_MS", 3_600_000);
 
 export const MAX_REDIRECTS = 3;
+
+/** Default max response body chars for fetch_url / fetchHttpGet (256KB, same as http_request). */
+export const DEFAULT_FETCH_MAX_BODY = 262_144;
+
+/** Response header keys returned by check_url when includeAllHeaders is false. */
+export const CHECK_URL_HEADER_KEYS = [
+  "content-type",
+  "content-length",
+  "location",
+  "server",
+  "cache-control",
+] as const;
+
+export function httpUserAgent(): string {
+  return `${SERVER_NAME}/${SERVER_VERSION}`;
+}
 
 /** Sensitive filenames never copied into debug bundles */
 export const SENSITIVE_FILE_PATTERNS = [

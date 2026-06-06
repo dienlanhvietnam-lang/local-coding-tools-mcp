@@ -54,6 +54,8 @@ describe("copilot MCP force policy installer R1", () => {
     expect(agent).toContain("run_project_script");
     expect(agent).toContain("MCP_NOT_AVAILABLE");
     expect(agent).toMatch(/MCP_ONLY|BẮT BUỘC/);
+    expect(agent).toContain("TODO_AUTO");
+    expect(agent).toContain("RESPONSE_STYLE");
 
     const instr = fs.readFileSync(
       path.join(ROOT, "templates/copilot/copilot-instructions.md"),

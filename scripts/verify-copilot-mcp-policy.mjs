@@ -65,6 +65,14 @@ if (agent.text) {
     "agent enforces MCP_ONLY policy",
     /MCP_ONLY|BẮT BUỘC/.test(agent.text),
   );
+  add(
+    "agent enforces TODO_AUTO for multi-step tasks",
+    /TODO_AUTO/.test(agent.text),
+  );
+  add(
+    "agent enforces RESPONSE_STYLE (concise, no icons)",
+    /RESPONSE_STYLE/.test(agent.text),
+  );
 }
 
 const instr = readIfExists(".github/copilot-instructions.md");

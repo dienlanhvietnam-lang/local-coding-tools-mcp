@@ -2,6 +2,12 @@
 
 Workspace này dùng MCP server **local-coding-tools** (v0.11.x, **61 tools**). Trong Copilot Chat **phải** chọn agent **DMCTN-MCP**.
 
+## RESPONSE_STYLE — gọn, đúng câu hỏi, không icon
+
+- Trả lời đúng ý hỏi trước; không emoji/icon; không paste JSON tool dài.
+- Tóm tắt kết quả MCP (`status` + fact chính); code block chỉ khi cần copy.
+- Tiếng Việt nếu user dùng tiếng Việt; không kết bài hỏi thêm việc khác.
+
 ## MCP_ONLY — bắt buộc
 
 - **Chỉ** gọi tools từ `local-coding-tools/*` khi agent **DMCTN-MCP** đang bật.
@@ -26,11 +32,21 @@ Workspace này dùng MCP server **local-coding-tools** (v0.11.x, **61 tools**). 
 | output lớn / cache | `fetch_cached_output`, `estimate_tool_output` |
 | tiếp tục phiên | `get_session_context`, `summarize_tool_history` |
 
+## TODO_AUTO — bắt buộc task nhiều bước
+
+Khi agent **DMCTN-MCP** xử lý task cần ≥2 thao tác MCP:
+
+1. `todo_read` → `todo_write` (kế hoạch bước, một `in_progress`)
+2. Sau mỗi bước → `todo_write` `merge: true` (cập nhật `completed` / `in_progress`)
+3. Trước báo xong → `todo_read` (mọi todo `completed` hoặc `cancelled`)
+
+Lưu tại `.mcp-debug/todos.json` (không có UI Copilot — vẫn phải gọi tool).
+
 ## Workflow tiết kiệm token
 
 1. Search trước (`search_workspace` / `semantic_search`), đọc sau (`read_workspace_file` + `startLine`/`lineCount`).
 2. Có `cacheId` → `fetch_cached_output`, không gọi lại tool cũ.
-3. Chuyển task → `clear_session_context`.
+3. Chuyển task → `clear_session_context` + todo mới.
 
 ## Bằng chứng & an toàn
 

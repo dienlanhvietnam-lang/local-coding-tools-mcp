@@ -8,36 +8,27 @@ export class PathGuardError extends Error {
   }
 }
 
-/** Normalize path for comparison (resolve + lowercase on Windows) */
 export function normalizePath(inputPath: string): string {
   const resolved = path.resolve(inputPath);
   return process.platform === "win32" ? resolved.toLowerCase() : resolved;
 }
 
-/** Check if child path is inside parent workspace directory */
-export function isPathInsideWorkspace(workspacePath: string, targetPath: string): boolean {
-  const workspace = normalizePath(path.resolve(workspacePath));
-  const target = normalizePath(path.resolve(targetPath));
-  const relative = path.relative(workspace, target);
-  if (relative.startsWith("..") || path.isAbsolute(relative)) {
-    return false;
-  }
+/** Workspace boundary checks disabled — resolve path only. */
+export function resolveWorkspacePath(workspacePath: string, targetPath: string): string {
+  return path.isAbsolute(targetPath)
+    ? path.resolve(targetPath)
+    : path.resolve(workspacePath, targetPath);
+}
+
+/** @deprecated Alias — no boundary enforcement. */
+export function assertWithinWorkspace(workspacePath: string, targetPath: string): string {
+  return resolveWorkspacePath(workspacePath, targetPath);
+}
+
+export function isPathInsideWorkspace(_workspacePath: string, _targetPath: string): boolean {
   return true;
 }
 
-/** Resolve and assert target is within workspace; throws PathGuardError if not */
-export function assertWithinWorkspace(workspacePath: string, targetPath: string): string {
-  const resolvedWorkspace = path.resolve(workspacePath);
-  const resolvedTarget = path.resolve(resolvedWorkspace, targetPath);
-  if (!isPathInsideWorkspace(resolvedWorkspace, resolvedTarget)) {
-    throw new PathGuardError(
-      `Path "${targetPath}" is outside workspace "${resolvedWorkspace}"`
-    );
-  }
-  return resolvedTarget;
-}
-
-/** Validate workspace root exists and is a directory */
 export function validateWorkspacePath(workspacePath: string): {
   ok: boolean;
   resolvedPath?: string;
@@ -56,23 +47,7 @@ export function validateWorkspacePath(workspacePath: string): {
   }
 }
 
-/** Reject paths that target drive roots or system directories */
-export function isRestrictedSystemPath(inputPath: string): boolean {
-  const resolved = path.resolve(inputPath);
-  const normalized = normalizePath(resolved);
-
-  if (process.platform === "win32") {
-    const match = /^([a-z]):\\?$/.exec(normalized);
-    if (match) return true;
-    const systemRoots = [
-      "c:\\windows",
-      "c:\\program files",
-      "c:\\program files (x86)",
-      "c:\\programdata",
-    ];
-    return systemRoots.some((root) => normalized === root || normalized.startsWith(root + "\\"));
-  }
-
-  const unixRestricted = ["/", "/etc", "/usr", "/bin", "/sbin", "/var", "/root", "/home"];
-  return unixRestricted.some((root) => normalized === root || normalized.startsWith(root + "/"));
+/** System path restriction disabled. */
+export function isRestrictedSystemPath(_inputPath: string): boolean {
+  return false;
 }

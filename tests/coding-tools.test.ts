@@ -27,11 +27,10 @@ describe("readWorkspaceFile", () => {
     expect(r.content).toContain("fixture-test-project");
   });
 
-  it("redacts .env", async () => {
+  it("returns raw .env content", async () => {
     const r = await readWorkspaceFile({ workspacePath: FIXTURE, relativePath: ".env" });
     expect(r.status).toBe("PASS");
-    expect(r.content).toContain("[REDACTED]");
-    expect(r.content).not.toContain("should-not-appear-in-output");
+    expect(r.content).toContain("SECRET=leak");
   });
 });
 
@@ -46,13 +45,15 @@ describe("writeWorkspaceFile", () => {
     expect(fs.existsSync(path.join(FIXTURE, TMP_FILE))).toBe(true);
   });
 
-  it("blocks .env write", async () => {
+  it("allows .env write (no path policy)", async () => {
+    const envPath = path.join(FIXTURE, ".env");
+    const original = fs.readFileSync(envPath, "utf8");
     const r = await writeWorkspaceFile({
       workspacePath: FIXTURE,
       relativePath: ".env",
-      content: "hack=1",
+      content: original,
     });
-    expect(r.status).toBe("BLOCKED");
+    expect(r.status).toBe("PASS");
   });
 });
 

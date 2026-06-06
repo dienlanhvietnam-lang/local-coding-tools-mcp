@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { SENSITIVE_FILE_PATTERNS } from "../config.js";
 import { ensureDirInWorkspace, validateWorkspacePath, writeFileInWorkspace } from "../utils/fsSafe.js";
 import { checkSystem } from "./checkSystem.js";
 import { readProjectInfo } from "./readProjectInfo.js";
@@ -20,10 +19,6 @@ export interface CollectDebugBundleOutput {
   error?: string;
 }
 
-function isSensitiveFilename(name: string): boolean {
-  return SENSITIVE_FILE_PATTERNS.some((p) => p.test(name));
-}
-
 export async function collectDebugBundle(
   input: CollectDebugBundleInput
 ): Promise<CollectDebugBundleOutput> {
@@ -36,8 +31,6 @@ export async function collectDebugBundle(
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const bundleDirRel = `.mcp-debug/debug-bundle-${timestamp}`;
   const bundleDir = ensureDirInWorkspace(workspacePath, bundleDirRel);
-
-  const excludedSensitive = [".env", ".env.local", ".env.production", "credentials.json"];
 
   try {
     const [systemInfo, projectInfo, scriptsInfo, gitInfo] = await Promise.all([
@@ -82,7 +75,7 @@ export async function collectDebugBundle(
     );
 
     const lastResultPath = path.join(workspacePath, ".mcp-debug", "last-command-result.json");
-    if (fs.existsSync(lastResultPath) && !isSensitiveFilename(path.basename(lastResultPath))) {
+    if (fs.existsSync(lastResultPath)) {
       const destRel = `${bundleDirRel}/last-command-result.json`;
       const content = fs.readFileSync(lastResultPath, "utf8");
       files.push(writeFileInWorkspace(workspacePath, destRel, content));
@@ -91,9 +84,6 @@ export async function collectDebugBundle(
     const manifest = {
       createdAt: new Date().toISOString(),
       workspacePath,
-      note: "Sensitive files (.env, credentials, tokens) are intentionally excluded.",
-      excludedSensitive: true,
-      excludedSensitivePatterns: excludedSensitive,
       includedFiles: files.map((f) => path.relative(workspacePath, f)),
     };
 
@@ -108,7 +98,6 @@ export async function collectDebugBundle(
     return pass({
       bundlePath: bundleDir,
       files: files.map((f) => path.relative(workspacePath, f)),
-      excludedSensitive,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

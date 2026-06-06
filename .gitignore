@@ -49,3 +49,7 @@ Desktop.ini
 # --- Misc backups ---
 *.bak
 *.bak-*
+
+# --- OCR tessdata (sync via npm run sync:tessdata / postinstall) ---
+eng.traineddata
+resources/tessdata/*.gz

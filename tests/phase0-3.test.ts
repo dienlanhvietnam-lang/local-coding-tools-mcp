@@ -10,7 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const FIXTURE = path.join(ROOT, "tests", "fixtures", "sample-project");
 
-describe("Phase 0.3 — expanded write allowlist", () => {
+describe("Phase 0.3 — write without allowlist", () => {
   const cleanup: string[] = [];
   afterAll(() => {
     for (const p of cleanup) {
@@ -86,14 +86,14 @@ describe("Phase 0.3 — apply_patch", () => {
     expect(fs.readFileSync(target, "utf8")).toBe("alpha BETA gamma");
   });
 
-  it("blocks dist output", async () => {
+  it("fails apply_patch when dist file missing (no allowlist block)", async () => {
     const r = await applyPatch({
       workspacePath: FIXTURE,
       relativePath: "dist/hack.js",
       oldText: "a",
       newText: "b",
     });
-    expect(r.status).toBe("BLOCKED");
+    expect(r.status).toBe("FAIL");
   });
 });
 

@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 /**
  * Clean ZIP verification: extract → npm install → build → smoke → verify → pilot-stdio.
+ * Uses spawnSync with shell:false (no DEP0190).
  */
-import { execSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { runCli } from "./run-cli.mjs";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
@@ -37,20 +38,18 @@ const report = {
   overall: "FAIL",
 };
 
-function run(cmd, cwd, label) {
-  try {
-    execSync(cmd, { cwd, stdio: "pipe", encoding: "utf8", shell: true });
+function run(command, args, cwd, label) {
+  const result = runCli(command, args, { cwd });
+  if (result.status === "PASS") {
     report.steps[label] = { status: "PASS" };
     return true;
-  } catch (err) {
-    const e = err;
-    report.steps[label] = {
-      status: "FAIL",
-      exitCode: e.status,
-      stderr: (e.stderr || e.message || "").slice(0, 500),
-    };
-    return false;
   }
+  report.steps[label] = {
+    status: "FAIL",
+    exitCode: result.exitCode,
+    stderr: (result.stderr || result.error || "").slice(0, 500),
+  };
+  return false;
 }
 
 function parseToolResult(result) {
@@ -97,20 +96,29 @@ if (!fs.existsSync(zipPath)) {
   if (forbidden.length) ok = false;
 
   fs.mkdirSync(extractDir, { recursive: true });
+  let extractOk = false;
   if (process.platform === "win32") {
-    execSync(
-      `powershell -NoProfile -Command "Expand-Archive -Path '${zipPath.replace(/'/g, "''")}' -DestinationPath '${extractDir.replace(/'/g, "''")}' -Force"`,
-      { stdio: "inherit" },
-    );
+    const ps = runCli("powershell", [
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-Command",
+      `Expand-Archive -LiteralPath '${zipPath.replace(/'/g, "''")}' -DestinationPath '${extractDir.replace(/'/g, "''")}' -Force`,
+    ]);
+    extractOk = ps.status === "PASS";
   } else {
-    execSync(`unzip -q -o "${zipPath}" -d "${extractDir}"`, { stdio: "inherit" });
+    const uz = runCli("unzip", ["-q", "-o", zipPath, "-d", extractDir]);
+    extractOk = uz.status === "PASS";
   }
-  report.steps.extract = { status: "PASS", path: extractDir };
+  report.steps.extract = extractOk
+    ? { status: "PASS", path: extractDir }
+    : { status: "FAIL", path: extractDir };
+  if (!extractOk) ok = false;
 
-  ok = run("npm install", extractDir, "npm install") && ok;
-  ok = run("npm run build", extractDir, "npm run build") && ok;
-  ok = run("npm run smoke", extractDir, "npm run smoke") && ok;
-  ok = run("npm run verify", extractDir, "npm run verify") && ok;
+  ok = run("npm", ["install"], extractDir, "npm install") && ok;
+  ok = run("npm", ["run", "build"], extractDir, "npm run build") && ok;
+  ok = run("npm", ["run", "smoke"], extractDir, "npm run smoke") && ok;
+  ok = run("npm", ["run", "verify"], extractDir, "npm run verify") && ok;
 
   const pilotScript = path.join(extractDir, "scripts", "pilot-stdio.mjs");
   const workspacePath = path.join(extractDir, "tests", "fixtures", "sample-project");
@@ -118,11 +126,11 @@ if (!fs.existsSync(zipPath)) {
 
   if (fs.existsSync(pilotScript)) {
     try {
-      const out = execSync(`node "${pilotScript}" "${pilotWorkspace}"`, {
-        cwd: extractDir,
-        encoding: "utf8",
-        shell: true,
-      });
+      const pilotResult = runCli("node", [pilotScript, pilotWorkspace], { cwd: extractDir });
+      const out = pilotResult.stdout;
+      if (pilotResult.status !== "PASS" && !out) {
+        throw new Error(pilotResult.error || pilotResult.stderr || "pilot-stdio failed");
+      }
       const pilot = JSON.parse(out);
       report.steps.pilotStdio = {
         status:
@@ -161,7 +169,7 @@ if (!fs.existsSync(zipPath)) {
       await client.connect(transport);
       const tools = await client.listTools();
       const count = tools.tools?.length ?? 0;
-      report.toolsList = { status: count === 27 ? "PASS" : "FAIL", count };
+      report.toolsList = { status: count === 28 ? "PASS" : "FAIL", count };
       const rs = parseToolResult(
         await client.callTool({
           name: "run_coding_session",
@@ -174,7 +182,7 @@ if (!fs.existsSync(zipPath)) {
       };
       report.steps.pilotStdio = {
         status:
-          count === 27 && report.run_coding_session.status === "PASS" ? "PASS" : "FAIL",
+          count === 28 && report.run_coding_session.status === "PASS" ? "PASS" : "FAIL",
       };
       await client.close();
       if (report.steps.pilotStdio.status !== "PASS") ok = false;

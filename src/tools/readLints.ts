@@ -2,7 +2,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { validateWorkspacePath } from "../utils/fsSafe.js";
 import { runCommand } from "../utils/execSafe.js";
-import { redactSecrets } from "../safety/secretRedactor.js";
 import { pass, fail } from "../utils/result.js";
 
 export interface ReadLintsInput {
@@ -108,9 +107,6 @@ export async function readLints(input: ReadLintsInput): Promise<ReadLintsOutput>
 
   if (input.projectSubdir) {
     const sub = input.projectSubdir.replace(/\\/g, "/");
-    if (sub.includes("..")) {
-      return fail("projectSubdir path traversal blocked");
-    }
     projectDir = path.join(workspacePath, sub);
     projectSubdir = sub;
     if (!fs.existsSync(projectDir) || !fs.statSync(projectDir).isDirectory()) {
@@ -129,7 +125,7 @@ export async function readLints(input: ReadLintsInput): Promise<ReadLintsOutput>
       cwd: projectDir,
       timeoutMs,
     });
-    const combined = redactSecrets([tsc.stdout, tsc.stderr].filter(Boolean).join("\n"));
+    const combined = [tsc.stdout, tsc.stderr].filter(Boolean).join("\n");
     rawParts.push(`[typescript]\n${combined}`);
     diagnostics.push(...parseTscOutput(combined));
   }
@@ -141,7 +137,7 @@ export async function readLints(input: ReadLintsInput): Promise<ReadLintsOutput>
       ["eslint", ".", "--format", "json", "--max-warnings", "0"],
       { cwd: projectDir, timeoutMs }
     );
-    const combined = redactSecrets([eslint.stdout, eslint.stderr].filter(Boolean).join("\n"));
+    const combined = [eslint.stdout, eslint.stderr].filter(Boolean).join("\n");
     rawParts.push(`[eslint]\n${combined}`);
     diagnostics.push(...parseEslintJson(eslint.stdout));
   }

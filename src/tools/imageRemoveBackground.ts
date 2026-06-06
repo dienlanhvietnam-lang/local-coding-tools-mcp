@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { spawn } from "node:child_process";
 import { resolveImageInput, resolveImageOutput, guardFail } from "../safety/imageGuard.js";
 import { removeBackgroundNode } from "../utils/removeBackgroundNode.js";
 import {
@@ -38,29 +37,15 @@ export interface ImageRemoveBackgroundOutput {
   installHint?: string;
 }
 
-function runCommand(
+import { runCommand as safeRun } from "../utils/execSafe.js";
+
+async function runCli(
   command: string,
   args: string[],
   timeoutMs: number
 ): Promise<{ exitCode: number | null; stderr: string }> {
-  return new Promise((resolve) => {
-    const child = spawn(command, args, { shell: process.platform === "win32", windowsHide: true });
-    let stderr = "";
-    const timer = setTimeout(() => {
-      child.kill("SIGTERM");
-    }, timeoutMs);
-    child.stderr?.on("data", (d: Buffer) => {
-      stderr += d.toString();
-    });
-    child.on("close", (code) => {
-      clearTimeout(timer);
-      resolve({ exitCode: code, stderr });
-    });
-    child.on("error", () => {
-      clearTimeout(timer);
-      resolve({ exitCode: 1, stderr });
-    });
-  });
+  const result = await safeRun(command, args, { timeoutMs });
+  return { exitCode: result.exitCode, stderr: result.stderr };
 }
 
 function skipMissing(extra?: Record<string, unknown>): ImageRemoveBackgroundOutput {
@@ -80,7 +65,7 @@ async function removeViaRembgCli(
     return { ok: false, error: "rembg CLI not installed or not on PATH" };
   }
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  const result = await runCommand("rembg", ["i", inputPath, outputPath], timeoutMs);
+  const result = await runCli("rembg", ["i", inputPath, outputPath], timeoutMs);
   if (result.exitCode === 0 && fs.existsSync(outputPath)) {
     return { ok: true };
   }

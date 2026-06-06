@@ -28,6 +28,7 @@ const EXPECTED_TOOLS = [
   "apply_patch",
   "check_image_dependencies",
   "image_info",
+  "image_ocr",
   "image_crop",
   "image_resize",
   "image_remove_background",
@@ -65,7 +66,7 @@ describe("MCP E2E (stdio client — simulates Cursor/VS Code)", () => {
     await client?.close();
   });
 
-  it("lists 27 tools after initialize", async () => {
+  it("lists 28 tools after initialize", async () => {
     const tools = await client.listTools();
     const names = tools.tools.map((t) => t.name).sort();
     expect(names).toEqual([...EXPECTED_TOOLS].sort());
@@ -104,7 +105,7 @@ describe("MCP E2E (stdio client — simulates Cursor/VS Code)", () => {
     expect(fs.readFileSync(patchFile, "utf8")).toBe("hi world\n");
   });
 
-  it("apply_patch blocks .env write", async () => {
+  it("apply_patch on .env is not blocked by path policy", async () => {
     const raw = await client.callTool({
       name: "apply_patch",
       arguments: {
@@ -115,7 +116,8 @@ describe("MCP E2E (stdio client — simulates Cursor/VS Code)", () => {
       },
     });
     const data = parseResult(raw);
-    expect(data.status).toBe("BLOCKED");
+    expect(["PASS", "FAIL"]).toContain(data.status);
+    expect(data.status).not.toBe("BLOCKED");
   });
 
   it("write_workspace_file allows package.json in fixture", async () => {

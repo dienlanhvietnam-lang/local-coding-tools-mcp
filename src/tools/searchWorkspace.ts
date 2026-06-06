@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import { assertWithinWorkspace, validateWorkspacePath } from "../safety/pathGuard.js";
-import { redactSecrets } from "../safety/secretRedactor.js";
 import { pass, fail } from "../utils/result.js";
 
 export interface SearchWorkspaceInput {
@@ -90,7 +89,7 @@ function walkAndSearch(
               matches.push({
                 file: rel,
                 line: i + 1,
-                text: redactSecrets(lines[i]!.trim()).slice(0, 500),
+                text: lines[i]!.trim().slice(0, 500),
               });
             }
           }

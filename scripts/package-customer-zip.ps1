@@ -5,7 +5,7 @@
 #>
 param(
   [string]$ProjectRoot = (Split-Path $PSScriptRoot -Parent),
-  [string]$Version = "0.7.0"
+  [string]$Version = "0.8.0"
 )
 
 $ErrorActionPreference = "Stop"
@@ -77,6 +77,8 @@ New-Item -ItemType Directory -Path $scriptsDest -Force | Out-Null
 foreach ($s in @(
     "install-vscode-mcp.ps1",
     "install-cursor-mcp.ps1",
+    "bootstrap-customer-install.ps1",
+    "verify-copilot-mcp-policy.mjs",
     "test-mcp-install.ps1",
     "package-customer-zip.ps1",
     "check-image-deps.ps1",
@@ -85,8 +87,12 @@ foreach ($s in @(
     "verify-full-image-local.ps1",
     "verify-image-profile.mjs",
     "image-deps-smoke.mjs",
+    "run-cli.mjs",
+    "check-exec-hardening.mjs",
     "generate-image-fixtures.mjs",
     "pilot-stdio.mjs",
+    "hard-test-27-tools.mjs",
+    "sync-bundled-tessdata.mjs",
     "smoke.mjs",
     "verify.mjs",
     "release-gate.mjs",
@@ -105,12 +111,26 @@ if (Test-Path $imagesSrc) {
   Copy-Item $imagesSrc $imagesDest -Recurse -Force
 }
 
-# Copy examples + docs
-foreach ($dir in @("examples", "docs")) {
+# Bundled OCR tessdata (eng + vie offline)
+$tessSrc = Join-Path $ProjectRoot "resources\tessdata"
+if (Test-Path $tessSrc) {
+  $tessDest = Join-Path $staging "resources\tessdata"
+  New-Item -ItemType Directory -Path (Split-Path $tessDest) -Force | Out-Null
+  Copy-Item $tessSrc $tessDest -Recurse -Force
+}
+
+# Copy examples + docs + copilot templates + pilot-kit
+foreach ($dir in @("examples", "docs", "templates", "pilot-kit")) {
   $srcDir = Join-Path $ProjectRoot $dir
   if (Test-Path $srcDir) {
     Copy-Item $srcDir (Join-Path $staging $dir) -Recurse -Force
   }
+}
+
+# Customer BAT installer
+$batSrc = Join-Path $ProjectRoot "CAI-MCP.bat"
+if (Test-Path $batSrc) {
+  Copy-Item $batSrc (Join-Path $staging "CAI-MCP.bat") -Force
 }
 
 # Verify staging has no forbidden items
@@ -164,7 +184,8 @@ Write-Host ""
 Write-Host "Customer install:" -ForegroundColor Cyan
 Write-Host "  1. Unzip to e.g. E:\MCP\local-coding-tools-mcp"
 Write-Host "  2. cd <folder> && npm install && npm run build"
-Write-Host "  3. powershell -File scripts\install-cursor-mcp.ps1 -EnableAllowlist"
-Write-Host "  4. powershell -File scripts\test-mcp-install.ps1"
+Write-Host "  3. CAI-MCP.bat (hoặc install-vscode-mcp.ps1 -InstallCopilotAgent -ForceMcpPolicy -Yes)"
+Write-Host "  4. Chọn Agent DMCTN-MCP trong Copilot Chat"
+Write-Host "  5. node scripts\verify-copilot-mcp-policy.mjs <workspace>"
 
 exit 0

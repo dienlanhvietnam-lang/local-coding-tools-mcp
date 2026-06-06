@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
-import { execSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import {
   buildDependencyComponents,
@@ -80,10 +80,12 @@ describe("image deps installer R1", () => {
   });
 
   it("image-deps-smoke.mjs passes", () => {
-    execSync("node scripts/image-deps-smoke.mjs", {
+    const r = spawnSync(process.execPath, ["scripts/image-deps-smoke.mjs"], {
       cwd: ROOT,
+      shell: false,
       encoding: "utf8",
       stdio: "pipe",
     });
+    expect(r.status).toBe(0);
   });
 });

@@ -8,6 +8,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CUSTOMER_SCRIPTS = [
   "scripts/install-vscode-mcp.ps1",
   "scripts/install-cursor-mcp.ps1",
+  "scripts/bootstrap-customer-install.ps1",
+  "scripts/verify-copilot-mcp-policy.mjs",
   "scripts/test-mcp-install.ps1",
   "scripts/package-customer-zip.ps1",
   "scripts/release-customer-pack.ps1",
@@ -23,6 +25,7 @@ const CUSTOMER_PACK_PATHS = [
 
 const CUSTOMER_DOCS = [
   "docs/HUONG-DAN-VSCODE-COPILOT.md",
+  "docs/HUONG-DAN-CAI-BANG-BAT.md",
   "docs/HUONG-DAN-CURSOR.md",
   "docs/TROUBLESHOOTING.md",
   "docs/RELEASE-CHECKLIST.md",
@@ -93,14 +96,14 @@ describe("customer install pack R1", () => {
     expect(pkg.scripts["validate:ci"]).toContain("validate-ci-yaml.mjs");
   });
 
-  it("install-cursor script does not enable allowlist by default", () => {
+  it("install-cursor script enables auto-approve MCP by default", () => {
     const content = fs.readFileSync(
       path.join(ROOT, "scripts/install-cursor-mcp.ps1"),
       "utf8",
     );
-    expect(content).toContain("EnableAllowlist");
-    expect(content).toMatch(/if\s*\(\s*\$EnableAllowlist\s*\)/);
-    expect(content).toContain("Run Everything");
+    expect(content).toContain("DisableAutoApprove");
+    expect(content).toMatch(/if\s*\(\s*-not\s+\$DisableAutoApprove\s*\)/);
+    expect(content).toContain("mcpAllowlist");
   });
 
   it("customer ZIP excludes forbidden paths when present", () => {
@@ -122,6 +125,9 @@ describe("customer install pack R1", () => {
 
     expect(text).toMatch(/dist[/\\]server\.js/);
     expect(text).toMatch(/install-vscode-mcp\.ps1/);
+    expect(text).toMatch(/verify-copilot-mcp-policy\.mjs/);
+    expect(text).toMatch(/DMCTN-MCP\.agent\.md/);
+    expect(text).toMatch(/CAI-MCP\.bat/);
     expect(text).toMatch(/HUONG-DAN-CURSOR\.md/);
     expect(text).toMatch(/verify-full-image-local\.ps1/);
     expect(text).toMatch(/image-deps-smoke\.mjs/);

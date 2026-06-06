@@ -2,7 +2,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { MAX_IMAGE_BYTES } from "../config.js";
 import { assertWithinWorkspace, validateWorkspacePath } from "./pathGuard.js";
-import { evaluateWritePath } from "./writePathPolicy.js";
 import { blocked, fail } from "../utils/result.js";
 
 export const ALLOWED_IMAGE_EXTENSIONS = new Set([
@@ -41,9 +40,6 @@ export function resolveImageInput(
   }
 
   const rel = relativePath.replace(/\\/g, "/");
-  if (rel.includes("..")) {
-    return { ok: false, error: "Path traversal blocked", status: "BLOCKED" };
-  }
 
   if (!isImageExtension(rel)) {
     return {
@@ -97,16 +93,6 @@ export function resolveImageOutput(
   }
 
   const rel = relativePath.replace(/\\/g, "/");
-  const decision = evaluateWritePath(rel);
-  if (!decision.allowed) {
-    const msg =
-      decision.reason === "sensitive_file"
-        ? "Sensitive output path blocked"
-        : decision.reason === "path_traversal"
-          ? "Path traversal blocked"
-          : "restricted_write_path";
-    return { ok: false, error: msg, status: "BLOCKED" };
-  }
 
   if (!isImageExtension(rel)) {
     return {

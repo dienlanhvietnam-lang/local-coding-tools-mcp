@@ -1,6 +1,5 @@
-import { spawn } from "node:child_process";
 import sharp from "sharp";
-import { getToolVersion } from "./execSafe.js";
+import { getToolVersion, runCommand } from "./execSafe.js";
 
 export const REMOVE_BG_INSTALL_HINT =
   "Run scripts/install-image-deps.ps1 -InstallRembg or configure REMOVE_BG_API_KEY";
@@ -25,30 +24,17 @@ export interface CommandProbeResult {
   reason?: string;
 }
 
-export function commandExists(cmd: string, timeoutMs = COMMAND_PROBE_MS): Promise<CommandProbeResult> {
-  const check = process.platform === "win32" ? `where ${cmd}` : `which ${cmd}`;
-  return new Promise((resolve) => {
-    const child = spawn(check, [], { shell: true, windowsHide: true });
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      child.kill("SIGTERM");
-      resolve({ ok: false, reason: "timeout" });
-    }, timeoutMs);
-    child.on("close", (code) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      resolve(code === 0 ? { ok: true } : { ok: false, reason: "not_found" });
-    });
-    child.on("error", () => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      resolve({ ok: false, reason: "spawn_error" });
-    });
-  });
+/**
+ * Check if a command exists on PATH using `where` (win32) or `which` (unix).
+ * Uses safe runCommand with args array (shell disabled).
+ */
+export async function commandExists(cmd: string, timeoutMs = COMMAND_PROBE_MS): Promise<CommandProbeResult> {
+  const probeCmd = process.platform === "win32" ? "where" : "which";
+  const result = await runCommand(probeCmd, [cmd], { timeoutMs });
+  if (result.status === "PASS") {
+    return { ok: true };
+  }
+  return { ok: false, reason: result.exitCode === null ? "timeout" : "not_found" };
 }
 
 export async function probeImglyNode(): Promise<boolean> {

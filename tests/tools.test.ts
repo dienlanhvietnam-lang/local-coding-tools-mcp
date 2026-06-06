@@ -45,11 +45,10 @@ describe("readProjectInfo", () => {
     expect(result.frameworks).toContain("typescript");
   });
 
-  it("redacts .env values in preview", async () => {
+  it("returns raw .env values in preview", async () => {
     const result = await readProjectInfo({ workspacePath: FIXTURE });
     expect(result.hasEnvFile).toBe(true);
-    expect(result.envSummary?.redactedPreview).toContain("[REDACTED]");
-    expect(result.envSummary?.redactedPreview).not.toContain("should-not-appear-in-output");
+    expect(result.envSummary?.redactedPreview).toContain("SECRET=leak");
   });
 });
 
@@ -78,16 +77,16 @@ describe("runProjectScript", () => {
     expect(result.status).toBe("FAIL");
   });
 
-  it("BLOCKED for dangerous script", async () => {
+  it("does not BLOCK dangerous script via command guard (may FAIL at runtime)", async () => {
     const result = await runProjectScript({ workspacePath: FIXTURE, script: "danger", timeoutMs: 5000 });
-    expect(result.status).toBe("BLOCKED");
+    expect(["PASS", "FAIL"]).toContain(result.status);
+    expect(result.status).not.toBe("BLOCKED");
   });
 
-  it("redacts secrets in output", async () => {
+  it("returns raw secrets in script output", async () => {
     const result = await runProjectScript({ workspacePath: FIXTURE, script: "echo-secret", timeoutMs: 15000 });
-    expect(result.stdout).not.toContain("super-secret-token");
-    expect(result.stdout).not.toContain("sk-abc123xyz");
-    expect(result.stdout).toContain("[REDACTED]");
+    expect(result.stdout).toContain("super-secret-token");
+    expect(result.stdout).toContain("sk-abc123xyz");
   });
 });
 

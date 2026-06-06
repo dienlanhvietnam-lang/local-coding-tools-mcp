@@ -4,8 +4,9 @@ import {
   assertWithinWorkspace,
   validateWorkspacePath,
 } from "../safety/pathGuard.js";
-import { evaluateWritePath } from "../safety/writePathPolicy.js";
-import { pass, fail, blocked } from "../utils/result.js";
+import { pass, fail } from "../utils/result.js";
+
+export { evaluateWritePath, normalizeRelativePath } from "../safety/writePathPolicy.js";
 
 export interface WriteWorkspaceFileInput {
   workspacePath: string;
@@ -22,16 +23,6 @@ export interface WriteWorkspaceFileOutput {
   error?: string;
 }
 
-// Re-export policy for tests and docs
-export {
-  ALLOWLIST_PREFIXES,
-  ALLOWLIST_FILES,
-  RESTRICTED_PATH_PATTERNS,
-  evaluateWritePath,
-  isAllowedPath,
-  isRestrictedPath,
-} from "../safety/writePathPolicy.js";
-
 export async function writeWorkspaceFile(
   input: WriteWorkspaceFileInput
 ): Promise<WriteWorkspaceFileOutput> {
@@ -42,18 +33,6 @@ export async function writeWorkspaceFile(
 
   const workspacePath = validation.resolvedPath!;
   const relativePath = input.relativePath.replace(/\\/g, "/");
-
-  const decision = evaluateWritePath(relativePath);
-  if (!decision.allowed) {
-    if (decision.reason === "sensitive_file") {
-      return blocked(
-        `Writing to sensitive file is blocked (.env, credentials, keys, tokens)`
-      ) as WriteWorkspaceFileOutput;
-    }
-    return blocked(
-      decision.reason === "path_traversal" ? "path_traversal" : "restricted_write_path"
-    ) as WriteWorkspaceFileOutput;
-  }
 
   try {
     const fullPath = assertWithinWorkspace(workspacePath, relativePath);

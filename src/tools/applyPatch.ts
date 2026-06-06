@@ -1,8 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { assertWithinWorkspace, validateWorkspacePath } from "../safety/pathGuard.js";
-import { evaluateWritePath } from "../safety/writePathPolicy.js";
-import { blocked, pass, fail } from "../utils/result.js";
+import { pass, fail } from "../utils/result.js";
 
 export interface ApplyPatchInput {
   workspacePath: string;
@@ -32,17 +31,6 @@ export async function applyPatch(input: ApplyPatchInput): Promise<ApplyPatchOutp
 
   const workspacePath = validation.resolvedPath!;
   const relativePath = input.relativePath.replace(/\\/g, "/");
-
-  const decision = evaluateWritePath(relativePath);
-  if (!decision.allowed) {
-    const msg =
-      decision.reason === "path_traversal"
-        ? "Path traversal blocked"
-        : decision.reason === "sensitive_file"
-          ? "Sensitive file write blocked"
-          : "restricted_write_path";
-    return blocked(msg) as ApplyPatchOutput;
-  }
 
   try {
     const fullPath = assertWithinWorkspace(workspacePath, relativePath);

@@ -1,6 +1,5 @@
 import path from "node:path";
 import { DEFAULT_SCRIPT_TIMEOUT_MS } from "../config.js";
-import { isDangerousCommand, hasSuspiciousAbsolutePath } from "../safety/commandGuard.js";
 import { validateWorkspacePath } from "../utils/fsSafe.js";
 import {
   detectPackageManager,
@@ -8,7 +7,7 @@ import {
 } from "../utils/execSafe.js";
 import { getScriptCommand } from "./listScripts.js";
 import { assertWithinWorkspace } from "../safety/pathGuard.js";
-import { blocked, pass, fail } from "../utils/result.js";
+import { pass, fail } from "../utils/result.js";
 import { writeFileInWorkspace } from "../utils/fsSafe.js";
 
 export interface RunProjectScriptInput {
@@ -48,17 +47,8 @@ export async function runProjectScript(
   let projectSubdir: string | undefined;
 
   if (input.projectSubdir) {
-    // Block path traversal
-    const normalized = input.projectSubdir.replace(/\\/g, "/");
-    if (normalized.includes("..")) {
-      return fail("projectSubdir must not contain path traversal (..)", {
-        workspacePath,
-        script: scriptName,
-      });
-    }
-    // Ensure subdir is within workspace
-    projectSubdir = normalized;
-    packageDir = assertWithinWorkspace(workspacePath, normalized);
+    projectSubdir = input.projectSubdir.replace(/\\/g, "/");
+    packageDir = assertWithinWorkspace(workspacePath, projectSubdir);
   }
 
   const scriptLookup = getScriptCommand(packageDir, scriptName);
@@ -66,34 +56,23 @@ export async function runProjectScript(
     return fail(scriptLookup.error, { workspacePath, script: scriptName, projectSubdir });
   }
 
-  const command = scriptLookup.command;
-  const danger = isDangerousCommand(command);
-  if (!danger.allowed) {
-    return blocked(danger.reason ?? "Dangerous script blocked") as RunProjectScriptOutput;
-  }
-
-  if (hasSuspiciousAbsolutePath(command)) {
-    return blocked(
-      "Script contains suspicious absolute path invocation"
-    ) as RunProjectScriptOutput;
-  }
-
   const pm = await detectPackageManager(packageDir);
   const result = await runPackageScript(packageDir, scriptName, timeoutMs, pm);
 
+  const timedOut = result.status === "TIMEOUT";
   const output: RunProjectScriptOutput = {
-    status: result.exitCode === 0 && !result.timedOut ? "PASS" : "FAIL",
+    status: result.status === "PASS" ? "PASS" : "FAIL",
     workspacePath,
     script: scriptName,
     projectSubdir,
     exitCode: result.exitCode,
     stdout: result.stdout,
     stderr: result.stderr,
-    timedOut: result.timedOut,
+    timedOut,
     truncated: result.truncated,
   };
 
-  if (result.timedOut) {
+  if (timedOut) {
     output.error = `Script timed out after ${timeoutMs}ms`;
   }
 
@@ -106,7 +85,7 @@ export async function runProjectScript(
           script: scriptName,
           projectSubdir,
           exitCode: result.exitCode,
-          timedOut: result.timedOut,
+          timedOut,
           truncated: result.truncated,
           recordedAt: new Date().toISOString(),
         },

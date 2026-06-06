@@ -7,7 +7,7 @@ import path from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 
-export const EXPECTED_TOOL_COUNT = 27;
+export const EXPECTED_TOOL_COUNT = 28;
 
 export const FORBIDDEN_PATTERNS = [
   [/node_modules/i, "node_modules"],
@@ -30,6 +30,9 @@ export const REQUIRED_ZIP_MARKERS = [
   "README.md",
   "docs/HUONG-DAN-FULL-IMAGE.md",
   "scripts/install-vscode-mcp.ps1",
+  "scripts/verify-copilot-mcp-policy.mjs",
+  "scripts/bootstrap-customer-install.ps1",
+  "templates/copilot/DMCTN-MCP.agent.md",
   "scripts/install-cursor-mcp.ps1",
   "scripts/check-image-deps.ps1",
   "scripts/install-image-deps.ps1",

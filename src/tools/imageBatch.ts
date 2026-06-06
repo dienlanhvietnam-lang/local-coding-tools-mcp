@@ -1,7 +1,6 @@
 import path from "node:path";
 import { MAX_BATCH_IMAGES } from "../config.js";
 import { validateWorkspacePath } from "../safety/pathGuard.js";
-import { evaluateWritePath } from "../safety/writePathPolicy.js";
 import { imageInfo } from "./imageInfo.js";
 import { imageResize } from "./imageResize.js";
 import { pass, fail, partial } from "../utils/result.js";
@@ -47,11 +46,6 @@ export async function imageBatch(input: ImageBatchInput): Promise<ImageBatchOutp
 
   const workspacePath = validation.resolvedPath!;
   const outputDir = input.outputDir.replace(/\\/g, "/").replace(/\/$/, "");
-
-  const outDecision = evaluateWritePath(`${outputDir}/.keep`);
-  if (!outDecision.allowed) {
-    return fail("outputDir is not in write allowlist", { workspacePath });
-  }
 
   if (!input.inputPaths?.length) {
     return fail("inputPaths must not be empty");

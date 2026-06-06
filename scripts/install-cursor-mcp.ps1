@@ -5,11 +5,16 @@
 #>
 param(
   [string]$WorkspaceRoot = (Get-Location).Path,
-  [string]$ServerRoot = "E:\MCP\local-coding-tools-mcp",
-  [switch]$EnableAllowlist
+  [string]$ServerRoot = (Split-Path $PSScriptRoot -Parent),
+  [switch]$DisableAutoApprove
 )
 
 $ErrorActionPreference = "Stop"
+
+trap {
+  Write-Host "[FAIL] Unhandled error at line $($_.InvocationInfo.ScriptLineNumber): $($_.Exception.Message)" -ForegroundColor Red
+  exit 1
+}
 
 function Write-Result([string]$Name, [bool]$Pass, [string]$Detail = "") {
   $status = if ($Pass) { "PASS" } else { "FAIL" }
@@ -23,7 +28,7 @@ function Write-Result([string]$Name, [bool]$Pass, [string]$Detail = "") {
 Write-Host "`n=== install-cursor-mcp.ps1 ===" -ForegroundColor Cyan
 Write-Host "WorkspaceRoot:     $WorkspaceRoot"
 Write-Host "ServerRoot:        $ServerRoot"
-Write-Host "EnableAllowlist:   $EnableAllowlist"
+Write-Host "DisableAutoApprove: $DisableAutoApprove"
 
 $allPass = $true
 
@@ -81,7 +86,7 @@ try {
   $allPass = (Write-Result "mcp.json valid JSON" $false $_.Exception.Message) -and $allPass
 }
 
-if ($EnableAllowlist) {
+if (-not $DisableAutoApprove) {
   if (Test-Path $permFile) {
     $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
     Copy-Item $permFile "$permFile.bak-$stamp" -Force
@@ -95,15 +100,14 @@ if ($EnableAllowlist) {
 }
 "@
   Set-Content -Path $permFile -Value $permJson -Encoding UTF8
-  $allPass = (Write-Result "write .cursor/permissions.json (allowlist)" (Test-Path $permFile)) -and $allPass
-  Write-Host "Allowlist enabled. Set Run Mode = Allowlist in Cursor Settings." -ForegroundColor Yellow
+  $allPass = (Write-Result "write .cursor/permissions.json (auto-approve MCP)" (Test-Path $permFile)) -and $allPass
+  Write-Host "Auto-approve enabled. Set Settings -> Agent -> Run Mode -> Allowlist (or Run Everything)." -ForegroundColor Yellow
 } else {
-  Write-Result "permissions.json skipped" $true "use -EnableAllowlist to auto-approve MCP tools"
+  Write-Result "permissions.json skipped" $true "-DisableAutoApprove set"
 }
 
 Write-Host ""
-Write-Host "WARNING: Do NOT use Run Everything unless you fully trust this MCP server." -ForegroundColor Yellow
-Write-Host "Recommended: Settings -> Agent -> Run Mode -> Allowlist (with -EnableAllowlist)" -ForegroundColor Yellow
+Write-Host "Tip: Settings -> chat.mcp.autostart = always (optional)" -ForegroundColor Cyan
 
 if ($allPass) {
   Write-Host "`nINSTALL PASS — Reload Cursor window." -ForegroundColor Green

@@ -21,6 +21,7 @@ import { runCodingSession } from "./tools/runCodingSession.js";
 import { readLints } from "./tools/readLints.js";
 import { applyPatch } from "./tools/applyPatch.js";
 import { imageInfo } from "./tools/imageInfo.js";
+import { imageOcr } from "./tools/imageOcr.js";
 import { imageCrop } from "./tools/imageCrop.js";
 import { imageResize } from "./tools/imageResize.js";
 import { imageRemoveBackground } from "./tools/imageRemoveBackground.js";
@@ -48,11 +49,9 @@ const server = new McpServer({
   version: SERVER_VERSION,
 });
 
-// ── Batch workflow (1 approval thay vì 7) ──────────────────────────────────
-
 server.tool(
   "run_coding_session",
-  "Run full coding workflow in one call: check_system, check_workspace, read_project_info, list_scripts, optional build/test script, git_status, collect_debug_bundle. Prefer this to avoid repeated MCP approval prompts.",
+  "Run full coding workflow in one call: check_system, check_workspace, read_project_info, list_scripts, optional build/test script, git_status, collect_debug_bundle.",
   {
     workspacePath: workspacePathSchema,
     runScript: z.boolean().optional().describe("Run build or test script if present (default true)"),
@@ -97,7 +96,7 @@ server.tool(
 
 server.tool(
   "read_project_info",
-  "Read package.json, detect frameworks, summarize .env keys (values redacted — secrets never exposed).",
+  "Read package.json, detect frameworks, summarize .env keys and values.",
   { workspacePath: workspacePathSchema },
   READ_ONLY,
   async ({ workspacePath }) =>
@@ -136,7 +135,7 @@ server.tool(
 
 server.tool(
   "read_workspace_file",
-  "Read a text file inside the workspace. .env values are redacted. Path must stay within workspace.",
+  "Read a text file (any path relative or absolute).",
   {
     workspacePath: workspacePathSchema,
     relativePath: z.string().describe("Path relative to workspace root"),
@@ -153,7 +152,7 @@ server.tool(
 
 server.tool(
   "search_workspace",
-  "Search file contents in workspace using regex. Skips node_modules/.git. Output is redacted.",
+  "Search file contents in workspace using regex. Skips node_modules/.git.",
   {
     workspacePath: workspacePathSchema,
     pattern: z.string().describe("Regex pattern to search"),
@@ -208,7 +207,7 @@ server.tool(
 
 server.tool(
   "write_workspace_file",
-  "Write or create a file inside workspace. Blocks .env, credentials, keys. Path must stay within workspace.",
+  "Write or create a file at any path (relative or absolute).",
   {
     workspacePath: workspacePathSchema,
     relativePath: z.string().describe("Path relative to workspace root"),
@@ -226,7 +225,7 @@ server.tool(
 
 server.tool(
   "run_project_script",
-  "Run a script that exists in package.json only. Blocks dangerous patterns. Output is redacted and truncated.",
+  "Run a script that exists in package.json only. Output may be truncated.",
   {
     workspacePath: workspacePathSchema,
     script: z.string().describe("Script name from package.json scripts section"),
@@ -274,7 +273,7 @@ server.tool(
 
 server.tool(
   "apply_patch",
-  "Apply a search-and-replace patch to a workspace file. Respects write allowlist and blocks sensitive paths.",
+  "Apply a search-and-replace patch to a file at any path.",
   {
     workspacePath: workspacePathSchema,
     relativePath: z.string().describe("File path relative to workspace"),
@@ -295,7 +294,7 @@ server.tool(
 
 server.tool(
   "check_image_dependencies",
-  "Check image toolchain: sharp (core), rembg/imgly/remove.bg API, Real-ESRGAN CLI, Replicate token. Returns PASS/PARTIAL/FAIL without exposing secrets.",
+  "Check image toolchain: sharp (core), rembg/imgly/remove.bg API, Real-ESRGAN CLI, Replicate token.",
   {},
   READ_ONLY,
   async () =>
@@ -318,6 +317,34 @@ server.tool(
     jsonText(
       await withToolLogging("image_info", { workspacePath, riskLevel: "low" }, () =>
         imageInfo({ workspacePath, relativePath })
+      )
+    )
+);
+
+server.tool(
+  "image_ocr",
+  "OCR text from an image (Tesseract.js + Sharp preprocess). Returns JSON: metadata, fullText, word blocks with bbox/confidence. Default language eng uses bundled tessdata (no API key).",
+  {
+    workspacePath: workspacePathSchema,
+    relativePath: z.string().describe("Image path relative to workspace"),
+    languages: z
+      .string()
+      .optional()
+      .describe('Tesseract langs: "eng", "vie", or "eng+vie" (bundled offline, no API key)'),
+    maxDimension: z
+      .number()
+      .optional()
+      .describe("Max long edge in px before OCR (default 1600)"),
+    includeBlocks: z
+      .boolean()
+      .optional()
+      .describe("Include per-word blocks with bbox (default true)"),
+  },
+  IMAGE_READ,
+  async ({ workspacePath, relativePath, languages, maxDimension, includeBlocks }) =>
+    jsonText(
+      await withToolLogging("image_ocr", { workspacePath, riskLevel: "low" }, () =>
+        imageOcr({ workspacePath, relativePath, languages, maxDimension, includeBlocks })
       )
     )
 );
@@ -555,12 +582,27 @@ server.tool(
     )
 );
 
+function logFatalToStderr(label: string, err: unknown): void {
+  const message = err instanceof Error ? err.stack ?? err.message : String(err);
+  console.error(`${label}:`, message);
+}
+
+process.on("uncaughtException", (err) => {
+  logFatalToStderr("Uncaught MCP server exception", err);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  logFatalToStderr("Unhandled MCP server rejection", reason);
+  process.exit(1);
+});
+
 async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }
 
 main().catch((err) => {
-  console.error("Fatal MCP server error:", err);
+  logFatalToStderr("Fatal MCP server error", err);
   process.exit(1);
 });

@@ -1,6 +1,20 @@
 import fs from "node:fs";
 import path from "node:path";
 
+function mimeFromPath(filePath: string): string {
+  switch (path.extname(filePath).toLowerCase()) {
+    case ".jpg":
+    case ".jpeg":
+      return "image/jpeg";
+    case ".webp":
+      return "image/webp";
+    case ".png":
+      return "image/png";
+    default:
+      return "application/octet-stream";
+  }
+}
+
 /**
  * Remove background using @imgly/background-removal-node (pure Node, no Python).
  * First run may download ML model (~tens of MB).
@@ -17,7 +31,7 @@ export async function removeBackgroundNode(
     }
 
     const inputBytes = fs.readFileSync(inputPath);
-    const blob = new Blob([inputBytes]);
+    const blob = new Blob([inputBytes], { type: mimeFromPath(inputPath) });
     const result = await removeBackground(blob, {
       output: { format: "image/png", quality: 0.9 },
     });

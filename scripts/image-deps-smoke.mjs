@@ -2,10 +2,10 @@
 /**
  * Smoke: image dependency scripts exist + exit codes for profiles.
  */
-import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { runCli } from "./run-cli.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -48,16 +48,9 @@ if (!verifyPs1.includes("RequireFullImage") || !verifyPs1.includes("Usage:")) {
 }
 
 function runMjs(profile) {
-  try {
-    execSync(`node "${path.join(ROOT, "scripts/check-image-deps.mjs")}" --profile ${profile} --json`, {
-      cwd: ROOT,
-      encoding: "utf8",
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    return 0;
-  } catch (e) {
-    return e.status ?? 1;
-  }
+  const mjs = path.join(ROOT, "scripts/check-image-deps.mjs");
+  const result = runCli("node", [mjs, "--profile", profile, "--json"], { cwd: ROOT });
+  return result.exitCode ?? 1;
 }
 
 const coreExit = runMjs("image-core");

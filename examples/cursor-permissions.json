@@ -1,11 +1,5 @@
 {
-  // Copy vào ~/.cursor/permissions.json để auto-approve MCP trên mọi project
   "mcpAllowlist": [
     "local-coding-tools:*"
-  ],
-  "autoRun": {
-    "allow_instructions": [
-      "local-coding-tools tools are local-only, workspace-scoped, with commandGuard and secret redaction."
-    ]
-  }
+  ]
 }

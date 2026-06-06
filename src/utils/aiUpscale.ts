@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { spawn } from "node:child_process";
+import { runCommand as safeRun } from "./execSafe.js";
 
 /** Replicate model: nightmareai/real-esrgan */
 export const REPLICATE_ESRGAN_VERSION =
@@ -8,36 +8,23 @@ export const REPLICATE_ESRGAN_VERSION =
 
 export type AiUpscaleMethod = "realesrgan-cli" | "waifu2x-cli" | "replicate-api";
 
-function runCommand(
+/**
+ * Run a CLI upscaler with safe command+args (no shell concat).
+ * If the command is missing, returns a FAIL result — callers treat as SKIPPED.
+ */
+async function runCli(
   command: string,
   args: string[],
   timeoutMs: number
 ): Promise<{ exitCode: number | null; stderr: string }> {
-  return new Promise((resolve) => {
-    const child = spawn(command, args, { shell: process.platform === "win32", windowsHide: true });
-    let stderr = "";
-    const timer = setTimeout(() => child.kill("SIGTERM"), timeoutMs);
-    child.stderr?.on("data", (d: Buffer) => {
-      stderr += d.toString();
-    });
-    child.on("close", (code) => {
-      clearTimeout(timer);
-      resolve({ exitCode: code, stderr });
-    });
-    child.on("error", () => {
-      clearTimeout(timer);
-      resolve({ exitCode: 1, stderr });
-    });
-  });
+  const result = await safeRun(command, args, { timeoutMs });
+  return { exitCode: result.exitCode, stderr: result.stderr };
 }
 
-function commandExists(cmd: string): Promise<boolean> {
-  const check = process.platform === "win32" ? `where ${cmd}` : `which ${cmd}`;
-  return new Promise((resolve) => {
-    const child = spawn(check, [], { shell: true, windowsHide: true });
-    child.on("close", (code) => resolve(code === 0));
-    child.on("error", () => resolve(false));
-  });
+async function commandExists(cmd: string): Promise<boolean> {
+  const probeCmd = process.platform === "win32" ? "where" : "which";
+  const result = await safeRun(probeCmd, [cmd], { timeoutMs: 5000 });
+  return result.status === "PASS";
 }
 
 export async function upscaleViaRealesrganCli(
@@ -58,7 +45,7 @@ export async function upscaleViaRealesrganCli(
 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   const model = scale >= 4 ? "realesrgan-x4plus" : "realesrgan-x4plus";
-  const result = await runCommand(
+  const result = await runCli(
     bin,
     ["-i", inputPath, "-o", outputPath, "-s", String(scale), "-n", model],
     timeoutMs
@@ -84,7 +71,7 @@ export async function upscaleViaWaifu2xCli(
   if (!bin) return { ok: false, error: "waifu2x-ncnn-vulkan not found on PATH" };
 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  const result = await runCommand(
+  const result = await runCli(
     bin,
     ["-i", inputPath, "-o", outputPath, "-s", String(scale), "-n", "noise3_scale2x"],
     timeoutMs

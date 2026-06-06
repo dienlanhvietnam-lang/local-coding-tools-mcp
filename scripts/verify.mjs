@@ -31,7 +31,14 @@ const baseRequired = [
   "docs/TROUBLESHOOTING.md",
   "scripts/install-vscode-mcp.ps1",
   "scripts/install-cursor-mcp.ps1",
+  "scripts/bootstrap-customer-install.ps1",
+  "scripts/verify-copilot-mcp-policy.mjs",
   "scripts/test-mcp-install.ps1",
+  "templates/copilot/DMCTN-MCP.agent.md",
+  "templates/copilot/copilot-instructions.md",
+  "CAI-MCP.bat",
+  "docs/HUONG-DAN-CAI-BANG-BAT.md",
+  "pilot-kit/CHECKLIST-VSCODE-COPILOT.md",
   "scripts/package-customer-zip.ps1",
   "scripts/pilot-stdio.mjs",
   "scripts/check-image-deps.ps1",
@@ -40,6 +47,8 @@ const baseRequired = [
   "scripts/verify-full-image-local.ps1",
   "scripts/verify-image-profile.mjs",
   "scripts/image-deps-smoke.mjs",
+  "scripts/run-cli.mjs",
+  "scripts/check-exec-hardening.mjs",
   "scripts/release-gate.mjs",
   "scripts/release-gate-lib.mjs",
   "docs/HUONG-DAN-FULL-IMAGE.md",
@@ -127,6 +136,42 @@ if (!vscodeInstall.includes('"servers"') || vscodeInstall.includes("mcpServers")
   console.log("✓ install-vscode-mcp.ps1 VS Code servers schema");
 }
 
+if (
+  !vscodeInstall.includes("InstallCopilotAgent") ||
+  !vscodeInstall.includes("ForceMcpPolicy") ||
+  !vscodeInstall.includes("DMCTN-MCP.agent.md")
+) {
+  console.error("✗ install-vscode-mcp.ps1 missing Copilot policy installer params");
+  ok = false;
+} else {
+  console.log("✓ install-vscode-mcp.ps1 Copilot policy installer");
+}
+
+const agentTpl = fs.readFileSync(
+  path.join(ROOT, "templates/copilot/DMCTN-MCP.agent.md"),
+  "utf8",
+);
+if (!agentTpl.includes("local-coding-tools/*")) {
+  console.error("✗ DMCTN-MCP.agent.md template missing tools wildcard");
+  ok = false;
+} else {
+  console.log("✓ templates/copilot/DMCTN-MCP.agent.md tools wildcard");
+}
+
+const instrTpl = fs.readFileSync(
+  path.join(ROOT, "templates/copilot/copilot-instructions.md"),
+  "utf8",
+);
+if (
+  !instrTpl.includes("run_project_script") ||
+  /(?:enable|use|set)\s+.*Run Everything/i.test(instrTpl)
+) {
+  console.error("✗ copilot-instructions template check failed");
+  ok = false;
+} else {
+  console.log("✓ templates/copilot/copilot-instructions.md mapping");
+}
+
 // Examples schema
 try {
   const cursor = JSON.parse(
@@ -172,15 +217,25 @@ if (fs.existsSync(zipPath)) {
 
 // Image deps installer smoke (+ CI yaml validation in dev repo only)
 try {
-  const { execSync } = await import("node:child_process");
-  execSync("node scripts/image-deps-smoke.mjs", { cwd: ROOT, stdio: "inherit" });
+  const { spawnSync } = await import("node:child_process");
+  function runScript(rel) {
+    const r = spawnSync(process.execPath, [path.join(ROOT, rel)], {
+      cwd: ROOT,
+      stdio: "inherit",
+      shell: false,
+    });
+    if (r.status !== 0) throw new Error(`${rel} exit ${r.status}`);
+  }
+  runScript("scripts/image-deps-smoke.mjs");
   if (!isCustomerPack) {
-    execSync("node scripts/validate-ci-yaml.mjs", { cwd: ROOT, stdio: "inherit" });
+    runScript("scripts/validate-ci-yaml.mjs");
+    runScript("scripts/check-exec-hardening.mjs");
   } else {
     console.log("○ validate-ci-yaml.mjs skipped (customer pack)");
+    console.log("○ check-exec-hardening.mjs skipped (customer pack)");
   }
-} catch {
-  console.error("✗ image-deps-smoke.mjs or validate-ci-yaml.mjs failed");
+} catch (e) {
+  console.error("✗ script smoke failed:", e?.message ?? e);
   ok = false;
 }
 

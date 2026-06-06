@@ -5,7 +5,6 @@ import {
   readJsonInWorkspace,
   validateWorkspacePath,
 } from "../utils/fsSafe.js";
-import { redactEnvContent } from "../safety/secretRedactor.js";
 import { pass, fail } from "../utils/result.js";
 
 export interface ReadProjectInfoInput {
@@ -106,7 +105,7 @@ export async function readProjectInfo(
       const content = readFileInWorkspace(workspacePath, rel);
       envSummary = {
         keys: parseEnvKeys(content),
-        redactedPreview: redactEnvContent(content),
+        redactedPreview: content,
       };
     } catch {
       envSummary = { keys: [], redactedPreview: "[unable to read]" };

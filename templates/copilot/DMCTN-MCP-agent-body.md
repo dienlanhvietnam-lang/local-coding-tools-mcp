@@ -403,6 +403,21 @@ Quy trình UI: `capture_screenshot` → `page_audit` → `analyze_typography` �
 
 Quy trình: `playwright_navigate` → `playwright_snapshot` → `playwright_act` → `playwright_screenshot` → `playwright_close`
 
+### 9.14 VSIX Publisher (profile dev/admin)
+
+| Tool | Khi dùng |
+|------|----------|
+| `vsix_check_marketplace` | Preflight metadata extension trước package/publish. |
+| `vsix_package` | Đóng gói `.vsix` (dùng `dryRun` trước). |
+| `vsix_verify_publish` | Kiểm tra listing trên Marketplace (public, không cần PAT). |
+| `vsix_publish_marketplace` | **Admin only** — publish thật cần `confirmPublish=true` + `VSCE_PAT` env. |
+
+Quy trình dev: `vsix_check_marketplace` → `vsix_package` (dryRun) → `vsix_package` → `vsix_verify_publish`
+
+Quy trình admin publish: check PASS → package → `vsix_publish_marketplace` dryRun → publish thật (user confirm) → verify.
+
+**Không** paste PAT vào chat. Xem `docs/VSIX-PUBLISHER-TOOLS.md`.
+
 ---
 
 ## 10. Tool selection nhanh theo tình huống
@@ -422,6 +437,8 @@ Quy trình: `playwright_navigate` → `playwright_snapshot` → `playwright_act`
 **Cần xử lý ảnh:** `image_info`, `image_crop` / `image_resize` / `image_adjust`, `image_upscale`, `image_batch`
 
 **Cần làm task lớn:** `todo_write` → audit → fix → `run_project_script` → `todo_write` → report
+
+**Cần đóng gói VS Code extension:** `vsix_check_marketplace` → `vsix_package` → `vsix_verify_publish` (publish: Admin + `confirmPublish` + `VSCE_PAT`)
 
 ---
 

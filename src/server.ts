@@ -74,6 +74,10 @@ import { maybeCache } from "./utils/maybeCache.js";
 import { getSessionContext, clearSessionContext } from "./tools/sessionContext.js";
 import { readProjectMemory } from "./tools/readProjectMemory.js";
 import { writeProjectMemory } from "./tools/writeProjectMemory.js";
+import { vsixCheckMarketplace } from "./tools/vsix/vsixCheckMarketplace.js";
+import { vsixPackage } from "./tools/vsix/vsixPackage.js";
+import { vsixPublishMarketplace } from "./tools/vsix/vsixPublishMarketplace.js";
+import { vsixVerifyPublish } from "./tools/vsix/vsixVerifyPublish.js";
 import { estimateToolOutput } from "./tools/estimateToolOutput.js";
 import { summarizeToolHistory } from "./tools/summarizeToolHistory.js";
 import { captureScreenshot } from "./tools/captureScreenshot.js";
@@ -678,6 +682,78 @@ server.tool(
     jsonText(
       await withToolLogging("write_project_memory", { workspacePath: args.workspacePath, riskLevel: "low" }, () =>
         writeProjectMemory(args)
+      )
+    )
+);
+
+server.tool(
+  "vsix_check_marketplace",
+  "Preflight VS Code extension for Marketplace publish (package.json, README, metadata). Dev/Admin profile.",
+  {
+    workspacePath: workspacePathSchema,
+    checkMarketplace: z.boolean().optional().describe("Optional public marketplace URL check"),
+  },
+  EXECUTE,
+  async (args) =>
+    jsonText(
+      await withToolLogging("vsix_check_marketplace", { workspacePath: args.workspacePath, riskLevel: "medium" }, () =>
+        vsixCheckMarketplace(args)
+      )
+    )
+);
+
+server.tool(
+  "vsix_package",
+  "Package VS Code extension to .vsix via @vscode/vsce. Requires check PASS. dryRun skips file creation.",
+  {
+    workspacePath: workspacePathSchema,
+    outputDir: z.string().optional().describe("Output dir relative to workspace (default release)"),
+    packageManager: z.enum(["auto", "npm", "pnpm", "yarn"]).optional(),
+    dryRun: z.boolean().optional(),
+  },
+  EXECUTE,
+  async (args) =>
+    jsonText(
+      await withToolLogging("vsix_package", { workspacePath: args.workspacePath, riskLevel: "medium" }, () =>
+        vsixPackage(args)
+      )
+    )
+);
+
+server.tool(
+  "vsix_publish_marketplace",
+  "Publish .vsix to Visual Studio Marketplace. BLOCKED without confirmPublish=true and VSCE_PAT env. Admin profile only.",
+  {
+    workspacePath: workspacePathSchema,
+    vsixPath: z.string().optional(),
+    confirmPublish: z.boolean().optional(),
+    dryRun: z.boolean().optional(),
+  },
+  EXECUTE,
+  async (args) =>
+    jsonText(
+      await withToolLogging("vsix_publish_marketplace", { workspacePath: args.workspacePath, riskLevel: "high" }, () =>
+        vsixPublishMarketplace(args)
+      )
+    )
+);
+
+server.tool(
+  "vsix_verify_publish",
+  "Verify extension listing on public Marketplace (no PAT required).",
+  {
+    workspacePath: workspacePathSchema.optional(),
+    publisher: z.string().optional(),
+    name: z.string().optional(),
+    expectedVersion: z.string().optional(),
+  },
+  NETWORK,
+  async (args) =>
+    jsonText(
+      await withToolLogging(
+        "vsix_verify_publish",
+        { workspacePath: args.workspacePath, riskLevel: "low" },
+        () => vsixVerifyPublish(args)
       )
     )
 );

@@ -80,6 +80,10 @@ export const EXPECTED_TOOLS = [
   "summarize_tool_history",
   "todo_read",
   "todo_write",
+  "vsix_check_marketplace",
+  "vsix_package",
+  "vsix_publish_marketplace",
+  "vsix_verify_publish",
   "write_project_memory",
   "write_workspace_file",
 ];

@@ -1,0 +1,8 @@
+{
+  "name": "partial-vsix-extension",
+  "displayName": "Partial VSIX",
+  "version": "0.2.0",
+  "publisher": "dmctn",
+  "engines": { "vscode": "^1.99.0" },
+  "main": "./src/extension.js"
+}

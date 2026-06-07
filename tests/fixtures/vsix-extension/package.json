@@ -1,0 +1,14 @@
+{
+  "name": "sample-vsix-extension",
+  "displayName": "Sample VSIX Extension",
+  "description": "Fixture for VSIX publisher tool tests",
+  "version": "0.1.0",
+  "publisher": "dmctn",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.99.0"
+  },
+  "categories": ["Other"],
+  "main": "./src/extension.js",
+  "activationEvents": ["onStartupFinished"]
+}

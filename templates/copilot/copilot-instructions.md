@@ -1,6 +1,11 @@
-# Copilot instructions — BẮT BUỘC dùng MCP local-coding-tools (82 tools)
+# Copilot instructions — BẮT BUỘC dùng MCP local-coding-tools (86 tools)
 
-Workspace này dùng MCP server **local-coding-tools** (v0.16.x, **82 tools**). Trong Copilot Chat **phải** chọn agent **DMCTN-MCP**.
+Workspace này dùng MCP server **local-coding-tools** (v0.17.x, **86 tools**). Trong Copilot Chat **phải** chọn agent phù hợp profile:
+
+- **DMCTN-MCP-Safe** — 82 tools (không VSIX publish)
+- **DMCTN-MCP-Dev** — check/package/verify VSIX (không publish)
+- **DMCTN-MCP-Admin** — đủ 86 tools, có `vsix_publish_marketplace` (cần `confirmPublish` + `VSCE_PAT`)
+- **DMCTN-MCP** — legacy full 86 tools
 
 ## RESPONSE_STYLE — gọn, đúng câu hỏi, không icon
 

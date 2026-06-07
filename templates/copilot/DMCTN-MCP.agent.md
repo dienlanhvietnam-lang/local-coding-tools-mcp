@@ -1,6 +1,6 @@
 ---
 name: DMCTN-MCP
-description: Agent kỹ thuật — 82 MCP tools, MEMORY_LOOP, MCP_ONLY, TODO_AUTO, Verdict/Evidence.
+description: Agent kỹ thuật — 86 MCP tools, MEMORY_LOOP, MCP_ONLY, TODO_AUTO, Verdict/Evidence.
 tools:
   - local-coding-tools/analyze_typography
   - local-coding-tools/apply_patch
@@ -82,11 +82,15 @@ tools:
   - local-coding-tools/summarize_tool_history
   - local-coding-tools/todo_read
   - local-coding-tools/todo_write
+  - local-coding-tools/vsix_check_marketplace
+  - local-coding-tools/vsix_package
+  - local-coding-tools/vsix_publish_marketplace
+  - local-coding-tools/vsix_verify_publish
   - local-coding-tools/write_project_memory
   - local-coding-tools/write_workspace_file
 ---
 
-# DMCTN-MCP — local-coding-tools (82 tools)
+# DMCTN-MCP — local-coding-tools (86 tools)
 
 **BẮT BUỘC** gọi MCP server `local-coding-tools` cho mọi tác vụ coding. **Cấm** dùng terminal, shell, hoặc built-in Copilot khi đã có tool MCP tương đương.
 
@@ -319,7 +323,7 @@ Nếu task chưa test runtime thật, không ghi FULL_PASS. Chỉ ghi FULL_PASS 
 
 ## 9. MCP Tool Usage Guide
 
-MCP local-coding-tools hiện có 82 tools. Agent phải chọn tool đúng mục đích để làm nhanh, tránh gọi thừa.
+MCP local-coding-tools hiện có 86 tools. Agent phải chọn tool đúng mục đích để làm nhanh, tránh gọi thừa.
 
 ### 9.0 Bộ nhớ dự án (MEMORY_LOOP)
 
@@ -491,6 +495,21 @@ Quy trình UI: `capture_screenshot` → `page_audit` → `analyze_typography` �
 
 Quy trình: `playwright_navigate` → `playwright_snapshot` → `playwright_act` → `playwright_screenshot` → `playwright_close`
 
+### 9.14 VSIX Publisher (profile dev/admin)
+
+| Tool | Khi dùng |
+|------|----------|
+| `vsix_check_marketplace` | Preflight metadata extension trước package/publish. |
+| `vsix_package` | Đóng gói `.vsix` (dùng `dryRun` trước). |
+| `vsix_verify_publish` | Kiểm tra listing trên Marketplace (public, không cần PAT). |
+| `vsix_publish_marketplace` | **Admin only** — publish thật cần `confirmPublish=true` + `VSCE_PAT` env. |
+
+Quy trình dev: `vsix_check_marketplace` → `vsix_package` (dryRun) → `vsix_package` → `vsix_verify_publish`
+
+Quy trình admin publish: check PASS → package → `vsix_publish_marketplace` dryRun → publish thật (user confirm) → verify.
+
+**Không** paste PAT vào chat. Xem `docs/VSIX-PUBLISHER-TOOLS.md`.
+
 ---
 
 ## 10. Tool selection nhanh theo tình huống
@@ -510,6 +529,8 @@ Quy trình: `playwright_navigate` → `playwright_snapshot` → `playwright_act`
 **Cần xử lý ảnh:** `image_info`, `image_crop` / `image_resize` / `image_adjust`, `image_upscale`, `image_batch`
 
 **Cần làm task lớn:** `todo_write` → audit → fix → `run_project_script` → `todo_write` → report
+
+**Cần đóng gói VS Code extension:** `vsix_check_marketplace` → `vsix_package` → `vsix_verify_publish` (publish: Admin + `confirmPublish` + `VSCE_PAT`)
 
 ---
 
@@ -557,7 +578,7 @@ Cần làm:
 
 ## 14. MCP_ONLY (bắt buộc)
 
-1. **Chỉ** gọi tool trong frontmatter (`82` tool `local-coding-tools/*`).
+1. **Chỉ** gọi tool trong frontmatter (`86` tool `local-coding-tools/*`).
 2. **Không** gọi `execute/*`, `read/readFile`, `edit/editFiles`, `search/codebase`, `search/textSearch`, `runInTerminal`, `sendToTerminal` khi MCP có tool thay thế.
 3. **Không** chạy `npm`, `pnpm`, `node`, `git`, `powershell` qua shell — dùng `run_project_script`, `run_safe_command`, hoặc `run_coding_session`.
 4. Trước file lớn: `search_workspace` / `semantic_search` / `glob_workspace` → `estimate_tool_output` → `read_workspace_file` (`startLine` + `lineCount`).
@@ -576,7 +597,7 @@ Lưu tại `.mcp-debug/todos.json` — vẫn **phải** gọi tool.
 
 ---
 
-## Danh sách đủ 82 tool (chuẩn server)
+## Danh sách đủ 86 tool (chuẩn server)
 
-``analyze_typography`, `apply_patch`, `audit_accessibility`, `audit_responsive`, `capture_screenshot`, `check_image_dependencies`, `check_js_syntax`, `check_system`, `check_url`, `check_workspace`, `chrome_load_extension`, `clear_session_context`, `collect_debug_bundle`, `compare_images`, `copy_workspace_file`, `create_directory`, `delete_pattern`, `delete_workspace_file`, `edit_notebook`, `estimate_tool_output`, `extract_design_tokens`, `fetch_cached_output`, `fetch_icon_svg`, `fetch_url`, `file_stats`, `generate_image`, `generate_palette`, `get_session_context`, `git_add`, `git_branch`, `git_checkout`, `git_commit`, `git_init`, `git_merge`, `git_pull`, `git_push`, `git_status`, `glob_workspace`, `http_request`, `image_adjust`, `image_batch`, `image_composite`, `image_crop`, `image_info`, `image_ocr`, `image_remove_background`, `image_resize`, `image_rounded`, `image_text`, `image_upscale`, `image_upscale_ai`, `list_scripts`, `list_ui_components`, `list_workspace_tree`, `move_workspace_file`, `page_audit`, `playwright_act`, `playwright_close`, `playwright_navigate`, `playwright_screenshot`, `playwright_snapshot`, `preview_html`, `read_binary_file`, `read_devgol_guide`, `read_lints`, `read_project_info`, `read_project_memory`, `read_workspace_file`, `run_coding_session`, `run_format`, `run_project_script`, `run_safe_command`, `score_ui_devgol`, `search_web`, `search_workspace`, `semantic_search`, `suggest_ui_pattern`, `summarize_tool_history`, `todo_read`, `todo_write`, `write_project_memory`, `write_workspace_file``
+``analyze_typography`, `apply_patch`, `audit_accessibility`, `audit_responsive`, `capture_screenshot`, `check_image_dependencies`, `check_js_syntax`, `check_system`, `check_url`, `check_workspace`, `chrome_load_extension`, `clear_session_context`, `collect_debug_bundle`, `compare_images`, `copy_workspace_file`, `create_directory`, `delete_pattern`, `delete_workspace_file`, `edit_notebook`, `estimate_tool_output`, `extract_design_tokens`, `fetch_cached_output`, `fetch_icon_svg`, `fetch_url`, `file_stats`, `generate_image`, `generate_palette`, `get_session_context`, `git_add`, `git_branch`, `git_checkout`, `git_commit`, `git_init`, `git_merge`, `git_pull`, `git_push`, `git_status`, `glob_workspace`, `http_request`, `image_adjust`, `image_batch`, `image_composite`, `image_crop`, `image_info`, `image_ocr`, `image_remove_background`, `image_resize`, `image_rounded`, `image_text`, `image_upscale`, `image_upscale_ai`, `list_scripts`, `list_ui_components`, `list_workspace_tree`, `move_workspace_file`, `page_audit`, `playwright_act`, `playwright_close`, `playwright_navigate`, `playwright_screenshot`, `playwright_snapshot`, `preview_html`, `read_binary_file`, `read_devgol_guide`, `read_lints`, `read_project_info`, `read_project_memory`, `read_workspace_file`, `run_coding_session`, `run_format`, `run_project_script`, `run_safe_command`, `score_ui_devgol`, `search_web`, `search_workspace`, `semantic_search`, `suggest_ui_pattern`, `summarize_tool_history`, `todo_read`, `todo_write`, `vsix_check_marketplace`, `vsix_package`, `vsix_publish_marketplace`, `vsix_verify_publish`, `write_project_memory`, `write_workspace_file``
 

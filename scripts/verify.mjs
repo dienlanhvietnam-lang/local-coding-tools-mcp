@@ -35,6 +35,9 @@ const baseRequired = [
   "scripts/verify-copilot-mcp-policy.mjs",
   "scripts/test-mcp-install.ps1",
   "templates/copilot/DMCTN-MCP.agent.md",
+  "templates/copilot/DMCTN-MCP-Safe.agent.md",
+  "templates/copilot/DMCTN-MCP-Dev.agent.md",
+  "templates/copilot/DMCTN-MCP-Admin.agent.md",
   "templates/copilot/copilot-instructions.md",
   "CAI-MCP.bat",
   "docs/HUONG-DAN-CAI-BANG-BAT.md",
@@ -54,6 +57,11 @@ const baseRequired = [
   "scripts/release-gate-lib.mjs",
   "docs/HUONG-DAN-FULL-IMAGE.md",
   "docs/RELEASE-CHECKLIST.md",
+  "docs/VSIX-PUBLISHER-TOOLS.md",
+  "docs/COPILOT-MCP-PROFILES.md",
+  "docs/TOOL-INVENTORY.md",
+  "dist/tools/vsix/vsixCheckMarketplace.js",
+  "dist/toolProfiles.js",
   "tests/fixtures/images/product-sample-1024.png",
   "dist/safety/imageGuard.js",
   "dist/safety/commandGuard.js",
@@ -107,8 +115,8 @@ for (const rel of required) {
   }
 }
 
-if (pkg.version !== "0.11.2") {
-  console.error(`✗ expected version 0.11.2, got ${pkg.version}`);
+if (pkg.version !== "0.17.0") {
+  console.error(`✗ expected version 0.17.0, got ${pkg.version}`);
   ok = false;
 } else {
   console.log(`✓ package.json version ${pkg.version}`);
@@ -246,5 +254,5 @@ if (!ok) {
 }
 const label = isCustomerPack
   ? "Verify PASSED (customer pack)"
-  : "Verify PASSED (v0.11.2 + customer install pack)";
+  : "Verify PASSED (v0.17.0 VSIX publisher tools)";
 console.log(`\n${label}`);

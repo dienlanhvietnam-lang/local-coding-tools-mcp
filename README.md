@@ -1,8 +1,13 @@
 # Local Coding Tools MCP
 
-**v0.15.0** — MCP stdio server: **coding + image editing + UI/UX design** cho Cursor / VS Code.
+**v0.17.0** — MCP stdio server: **coding + image editing + UI/UX design + VSIX publisher** cho Cursor / VS Code.
 
-**80 tools** | npm publish ready | winget template included
+**86 tools** | customer ZIP release | tool profiles: safe / dev / admin
+
+## VSIX Publisher tools (v0.17.0)
+
+`vsix_check_marketplace`, `vsix_package`, `vsix_verify_publish`, `vsix_publish_marketplace` (admin only).  
+See [docs/VSIX-PUBLISHER-TOOLS.md](docs/VSIX-PUBLISHER-TOOLS.md).
 
 ## Playwright browser tools (v0.15.0)
 

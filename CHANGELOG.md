@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.17.0 — VSIX Publisher tools (82 → 86 tools)
+
+- `vsix_check_marketplace`, `vsix_package`, `vsix_publish_marketplace`, `vsix_verify_publish`
+- Tool profiles: safe (no VSIX), dev (+check/package/verify), admin (+publish)
+- Secret redaction for VSCE_PAT / tokens
+- Docs: VSIX-PUBLISHER-TOOLS.md, COPILOT-MCP-PROFILES.md, TOOL-INVENTORY.md
+
 ## v0.16.0 — Project memory / MEMORY_LOOP (80 → 82 tools)
 
 - `read_project_memory`, `write_project_memory` — persistent `.mcp-debug/project-memory.json`

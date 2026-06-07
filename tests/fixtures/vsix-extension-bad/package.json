@@ -1,0 +1,8 @@
+{
+  "name": "bad-extension",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.99.0"
+  },
+  "main": "./src/extension.js"
+}

@@ -350,6 +350,19 @@ async function runHardTests(client, box) {
   record(results, "fetch_icon_svg", parseResult(await callToolSafe(client, "fetch_icon_svg", {
     workspacePath: box, library: "lucide", iconName: "check",
   })));
+  const vsixFixture = path.join(SERVER_ROOT, "tests", "fixtures", "vsix-extension");
+  record(results, "vsix_check_marketplace", parseResult(await callToolSafe(client, "vsix_check_marketplace", {
+    workspacePath: vsixFixture,
+  })));
+  record(results, "vsix_package", parseResult(await callToolSafe(client, "vsix_package", {
+    workspacePath: vsixFixture, dryRun: true,
+  })));
+  record(results, "vsix_verify_publish", parseResult(await callToolSafe(client, "vsix_verify_publish", {
+    publisher: "devgol", name: "dmctn-mcp",
+  })));
+  record(results, "vsix_publish_marketplace", parseResult(await callToolSafe(client, "vsix_publish_marketplace", {
+    workspacePath: vsixFixture, confirmPublish: false,
+  })));
   record(results, "playwright_navigate", parseResult(await callToolSafe(client, "playwright_navigate", {
     workspacePath: box, relativePath: uiRel,
   })));

@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.16.0 — Project memory / MEMORY_LOOP (80 → 82 tools)
+
+- `read_project_memory`, `write_project_memory` — persistent `.mcp-debug/project-memory.json`
+- Auto-record tool FAIL to session + project memory
+- `get_session_context` includes `recentFailures` + memory summary
+- Agent policy **MEMORY_LOOP** (extension v0.5.5, POLICY v7)
+
 ## v0.15.0 — Playwright browser tools (75 → 80 tools)
 
 5 interactive browser tools via `playwright-core` (optional dependency):

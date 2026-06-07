@@ -1,6 +1,6 @@
-# Copilot instructions — BẮT BUỘC dùng MCP local-coding-tools (80 tools)
+# Copilot instructions — BẮT BUỘC dùng MCP local-coding-tools (82 tools)
 
-Workspace này dùng MCP server **local-coding-tools** (v0.15.x, **80 tools**). Trong Copilot Chat **phải** chọn agent **DMCTN-MCP**.
+Workspace này dùng MCP server **local-coding-tools** (v0.16.x, **82 tools**). Trong Copilot Chat **phải** chọn agent **DMCTN-MCP**.
 
 ## RESPONSE_STYLE — gọn, đúng câu hỏi, không icon
 
@@ -42,7 +42,13 @@ Khi thiết kế/sửa/review giao diện:
 | UI/UX review | `capture_screenshot`, `preview_html`, `audit_accessibility`, `compare_images`, `score_ui_devgol` |
 | Playwright browser | `playwright_navigate`, `playwright_snapshot`, `playwright_screenshot`, `playwright_act`, `playwright_close` |
 | output lớn / cache | `fetch_cached_output`, `estimate_tool_output` |
-| tiếp tục phiên | `get_session_context`, `summarize_tool_history` |
+| bộ nhớ / chống lặp lỗi | `get_session_context`, `read_project_memory`, `write_project_memory`, `summarize_tool_history` |
+
+## MEMORY_LOOP — chống quên / chống lặp lỗi
+
+Đầu task (≥2 bước MCP): `get_session_context` → `read_project_memory` → `summarize_tool_history` (nếu tiếp task cũ) → `todo_read`/`todo_write`.
+
+Sau FAIL quan trọng: `write_project_memory` action=`append_failure`. Cuối task: `append_lesson`. Không `clear_session_context` khi chưa xong.
 
 ## TODO_AUTO — bắt buộc task nhiều bước
 

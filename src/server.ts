@@ -72,6 +72,8 @@ import { fetchCachedOutput } from "./tools/fetchCachedOutput.js";
 import { listCacheEntries, parseCacheId, readCache, CACHE_URI_SCHEME } from "./cache/outputCache.js";
 import { maybeCache } from "./utils/maybeCache.js";
 import { getSessionContext, clearSessionContext } from "./tools/sessionContext.js";
+import { readProjectMemory } from "./tools/readProjectMemory.js";
+import { writeProjectMemory } from "./tools/writeProjectMemory.js";
 import { estimateToolOutput } from "./tools/estimateToolOutput.js";
 import { summarizeToolHistory } from "./tools/summarizeToolHistory.js";
 import { captureScreenshot } from "./tools/captureScreenshot.js";
@@ -175,6 +177,23 @@ server.tool(
     jsonText(
       await withToolLogging("read_project_info", { workspacePath, riskLevel: "low" }, () =>
         readProjectInfo({ workspacePath })
+      )
+    )
+);
+
+server.tool(
+  "read_project_memory",
+  "Read persistent project memory: conventions, lessons, failed attempts (do-not-retry), pinned key files. MEMORY_LOOP step 1.",
+  {
+    workspacePath: workspacePathSchema,
+    maxLessons: z.number().optional(),
+    maxFailures: z.number().optional(),
+  },
+  READ_ONLY,
+  async (args) =>
+    jsonText(
+      await withToolLogging("read_project_memory", { workspacePath: args.workspacePath, riskLevel: "low" }, () =>
+        readProjectMemory(args)
       )
     )
 );
@@ -636,6 +655,32 @@ server.tool(
 );
 
 // ── Write / execute (still guarded) ────────────────────────────────────────
+
+server.tool(
+  "write_project_memory",
+  "Persist project memory: append_lesson, append_failure, add_convention, pin_key_file, clear. Stored in .mcp-debug/project-memory.json.",
+  {
+    workspacePath: workspacePathSchema,
+    action: z.enum(["append_lesson", "append_failure", "add_convention", "pin_key_file", "clear"]),
+    lesson: z.string().optional(),
+    task: z.string().optional(),
+    relatedFiles: z.array(z.string()).optional(),
+    tool: z.string().optional(),
+    error: z.string().optional(),
+    context: z.string().optional(),
+    doNotRetry: z.boolean().optional(),
+    convention: z.string().optional(),
+    keyFilePath: z.string().optional(),
+    keyFileReason: z.string().optional(),
+  },
+  WRITE,
+  async (args) =>
+    jsonText(
+      await withToolLogging("write_project_memory", { workspacePath: args.workspacePath, riskLevel: "low" }, () =>
+        writeProjectMemory(args)
+      )
+    )
+);
 
 server.tool(
   "write_workspace_file",

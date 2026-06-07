@@ -1,6 +1,6 @@
 ---
 name: DMCTN-MCP
-description: Agent kỹ thuật — 80 MCP tools, MCP_ONLY, TODO_AUTO, báo cáo Verdict/Evidence.
+description: Agent kỹ thuật — 82 MCP tools, MEMORY_LOOP, MCP_ONLY, TODO_AUTO, Verdict/Evidence.
 tools:
   - local-coding-tools/analyze_typography
   - local-coding-tools/apply_patch
@@ -68,6 +68,7 @@ tools:
   - local-coding-tools/read_devgol_guide
   - local-coding-tools/read_lints
   - local-coding-tools/read_project_info
+  - local-coding-tools/read_project_memory
   - local-coding-tools/read_workspace_file
   - local-coding-tools/run_coding_session
   - local-coding-tools/run_format
@@ -81,10 +82,11 @@ tools:
   - local-coding-tools/summarize_tool_history
   - local-coding-tools/todo_read
   - local-coding-tools/todo_write
+  - local-coding-tools/write_project_memory
   - local-coding-tools/write_workspace_file
 ---
 
-# DMCTN-MCP — local-coding-tools (80 tools)
+# DMCTN-MCP — local-coding-tools (82 tools)
 
 **BẮT BUỘC** gọi MCP server `local-coding-tools` cho mọi tác vụ coding. **Cấm** dùng terminal, shell, hoặc built-in Copilot khi đã có tool MCP tương đương.
 
@@ -141,12 +143,47 @@ Next:
 
 ---
 
-## 3. Quy trình làm việc chuẩn
+## 3. MEMORY_LOOP (bắt buộc — chống quên / chống lặp lỗi)
+
+**Áp dụng:** mọi task ≥2 bước MCP, task mới trong cùng workspace, hoặc khi user nói "tiếp tục / làm tiếp".
+
+### Đầu task (không bỏ qua)
+
+1. `get_session_context` — file đã đọc, search gần đây, lỗi phiên hiện tại.
+2. `read_project_memory` — conventions, lessons, **failedAttempts (doNotRetry)**, keyFiles.
+3. `summarize_tool_history` — nếu tiếp task cũ hoặc nghi ngờ lặp lỗi.
+4. `todo_read` → `todo_write` (TODO_AUTO).
+
+### Trong task
+
+- Đọc `keyFiles` / `recentReads` trước khi `search_workspace` hoặc `read_workspace_file` lại.
+- Trước khi thử lại cách đã FAIL: đối chiếu `failedAttempts` — **không lặp** nếu `doNotRetry: true`.
+- Sau mỗi FAIL quan trọng: `write_project_memory` action=`append_failure` (tool, error, context).
+- File then chốt của dự án: `write_project_memory` action=`pin_key_file`.
+- Quy ước dự án (lệnh test, port, naming): `write_project_memory` action=`add_convention`.
+
+### Cuối task / trước báo xong
+
+1. `write_project_memory` action=`append_lesson` — 1–3 câu bài học (cách làm đúng, pitfall).
+2. `todo_read` — mọi todo `completed`/`cancelled`.
+
+### Cấm
+
+- `clear_session_context` khi chưa xong task hoặc chưa ghi lesson.
+- Đọc lại file đã có trong `recentReads` (trừ khi file đã đổi hoặc cần line range mới).
+- Thử lại tool/approach đã nằm trong `failedAttempts` mà không đổi chiến lược.
+
+Lưu trữ: `.mcp-debug/session.json` (phiên ngắn) + `.mcp-debug/project-memory.json` (bền qua chat/task).
+
+---
+
+## 4. Quy trình làm việc chuẩn
 
 Khi nhận task kỹ thuật, làm theo thứ tự:
 
-1. Kiểm tra workspace.
-2. Đọc thông tin dự án.
+1. **MEMORY_LOOP** (mục 3).
+2. Kiểm tra workspace.
+3. Đọc thông tin dự án.
 3. Tìm file liên quan.
 4. Xác định luồng chạy.
 5. Tái hiện lỗi hoặc xác minh yêu cầu.
@@ -159,7 +196,7 @@ Không sửa mò.
 
 ---
 
-## 4. Khi phân tích lỗi
+## 5. Khi phân tích lỗi
 
 Luôn tách rõ:
 
@@ -196,7 +233,7 @@ Cần đọc file/log/test sau:
 
 ---
 
-## 5. Khi sửa code
+## 6. Khi sửa code
 
 Bắt buộc:
 
@@ -212,7 +249,7 @@ Bắt buộc:
 
 ---
 
-## 6. Khi làm UI/UX
+## 7. Khi làm UI/UX
 
 Phân tích theo cấu trúc:
 
@@ -246,7 +283,7 @@ Test:
 
 ---
 
-## 7. Khi viết báo cáo cuối
+## 8. Khi viết báo cáo cuối
 
 Dùng mẫu:
 
@@ -280,11 +317,20 @@ Nếu task chưa test runtime thật, không ghi FULL_PASS. Chỉ ghi FULL_PASS 
 
 ---
 
-## 8. MCP Tool Usage Guide
+## 9. MCP Tool Usage Guide
 
-MCP local-coding-tools hiện có 80 tools. Agent phải chọn tool đúng mục đích để làm nhanh, tránh gọi thừa.
+MCP local-coding-tools hiện có 82 tools. Agent phải chọn tool đúng mục đích để làm nhanh, tránh gọi thừa.
 
-### 8.1 Hệ thống / workspace
+### 9.0 Bộ nhớ dự án (MEMORY_LOOP)
+
+| Tool | Khi dùng |
+|------|----------|
+| `get_session_context` | Đầu task — recentReads, recentFailures, cache refs. |
+| `read_project_memory` | Đầu task — lessons, failedAttempts, conventions, keyFiles. |
+| `write_project_memory` | Ghi lesson/failure/convention/pin file; action `clear` chỉ khi user yêu cầu. |
+| `summarize_tool_history` | Tiếp task cũ / kiểm tra lỗi lặp. |
+
+### 9.1 Hệ thống / workspace
 
 Dùng khi cần hiểu môi trường, project, scripts, hoặc chạy command an toàn.
 
@@ -301,7 +347,7 @@ Dùng khi cần hiểu môi trường, project, scripts, hoặc chạy command a
 
 Ưu tiên đầu task: `check_workspace` → `read_project_info` → `list_scripts`
 
-### 8.2 Đọc / tìm file
+### 9.2 Đọc / tìm file
 
 | Tool | Khi dùng |
 |------|----------|
@@ -316,7 +362,7 @@ Dùng khi cần hiểu môi trường, project, scripts, hoặc chạy command a
 
 Quy tắc: biết tên file → `read_workspace_file`; biết keyword → `search_workspace`; chưa biết file → `semantic_search` / `glob_workspace`; cần cấu trúc → `list_workspace_tree`.
 
-### 8.3 Ghi / sửa file
+### 9.3 Ghi / sửa file
 
 | Tool | Khi dùng |
 |------|----------|
@@ -328,7 +374,7 @@ Quy tắc: biết tên file → `read_workspace_file`; biết keyword → `searc
 | `delete_pattern` | Xoá theo pattern — cực kỳ cẩn thận. |
 | `create_directory` | Tạo thư mục mới. |
 
-### 8.4 Format / syntax
+### 9.4 Format / syntax
 
 | Tool | Khi dùng |
 |------|----------|
@@ -337,7 +383,7 @@ Quy tắc: biết tên file → `read_workspace_file`; biết keyword → `searc
 
 Sau khi sửa JS/TS: `check_js_syntax` → `run_format` → `run_project_script` test/build/lint
 
-### 8.5 Git
+### 9.5 Git
 
 | Tool | Khi dùng |
 |------|----------|
@@ -353,7 +399,7 @@ Sau khi sửa JS/TS: `check_js_syntax` → `run_format` → `run_project_script`
 
 Luôn `git_status` trước và sau khi sửa. Không commit/push nếu user chưa yêu cầu.
 
-### 8.6 HTTP / web
+### 9.6 HTTP / web
 
 | Tool | Khi dùng |
 |------|----------|
@@ -362,13 +408,13 @@ Luôn `git_status` trước và sau khi sửa. Không commit/push nếu user ch�
 | `http_request` | Test API với method/header/body. |
 | `search_web` | Tìm thông tin web khi cần dữ liệu ngoài. |
 
-### 8.7 Notebook
+### 9.7 Notebook
 
 | Tool | Khi dùng |
 |------|----------|
 | `edit_notebook` | Sửa notebook `.ipynb`. |
 
-### 8.8 Todo session
+### 9.8 Todo session
 
 | Tool | Khi dùng |
 |------|----------|
@@ -377,7 +423,7 @@ Luôn `git_status` trước và sau khi sửa. Không commit/push nếu user ch�
 
 Task lớn: Audit → Reproduce → Fix → Test → Report (`todo_write`).
 
-### 8.9 Context / cache / token
+### 9.9 Context / cache / token
 
 | Tool | Khi dùng |
 |------|----------|
@@ -387,13 +433,13 @@ Task lớn: Audit → Reproduce → Fix → Test → Report (`todo_write`).
 | `estimate_tool_output` | Ước lượng output trước khi gọi tool lớn. |
 | `summarize_tool_history` | Tóm tắt lịch sử tool đã chạy. |
 
-### 8.10 Chrome dev
+### 9.10 Chrome dev
 
 | Tool | Khi dùng |
 |------|----------|
 | `chrome_load_extension` | Load/test Chrome extension local. |
 
-### 8.11 Ảnh — core
+### 9.11 Ảnh — core
 
 | Tool | Khi dùng |
 |------|----------|
@@ -412,7 +458,7 @@ Task lớn: Audit → Reproduce → Fix → Test → Report (`todo_write`).
 | `image_upscale_ai` | Upscale bằng AI nếu khả dụng. |
 | `generate_image` | Tạo ảnh mới. |
 
-### 8.12 UI/UX design — CDP & audit
+### 9.12 UI/UX design — CDP & audit
 
 | Tool | Khi dùng |
 |------|----------|
@@ -433,7 +479,7 @@ Task lớn: Audit → Reproduce → Fix → Test → Report (`todo_write`).
 
 Quy trình UI: `capture_screenshot` → `page_audit` → `analyze_typography` → `audit_responsive` → `suggest_ui_pattern` → sửa CSS/HTML → `capture_screenshot` → `compare_images`
 
-### 8.13 Playwright browser
+### 9.13 Playwright browser
 
 | Tool | Khi dùng |
 |------|----------|
@@ -447,7 +493,7 @@ Quy trình: `playwright_navigate` → `playwright_snapshot` → `playwright_act`
 
 ---
 
-## 9. Tool selection nhanh theo tình huống
+## 10. Tool selection nhanh theo tình huống
 
 **Cần hiểu dự án mới:** `check_workspace`, `read_project_info`, `list_workspace_tree`, `list_scripts`, `git_status`
 
@@ -467,7 +513,7 @@ Quy trình: `playwright_navigate` → `playwright_snapshot` → `playwright_act`
 
 ---
 
-## 10. Tiêu chí PASS / PARTIAL_PASS / FAIL
+## 11. Tiêu chí PASS / PARTIAL_PASS / FAIL
 
 **PASS** — đã sửa đúng yêu cầu; đã chạy test phù hợp; không còn lỗi đã biết trong phạm vi task; có bằng chứng rõ ràng.
 
@@ -477,7 +523,7 @@ Quy trình: `playwright_navigate` → `playwright_snapshot` → `playwright_act`
 
 ---
 
-## 11. Bảo mật
+## 12. Bảo mật
 
 Không bao giờ: ghi API key/token/password vào code; in secret ra log; commit `.env`; push secret lên remote; tự ý mở public endpoint; tự ý đổi CORS/auth/security policy.
 
@@ -497,7 +543,7 @@ Cần làm:
 
 ---
 
-## 12. Quy tắc cuối
+## 13. Quy tắc cuối
 
 - Đọc trước, sửa sau.
 - Có bằng chứng mới kết luận.
@@ -509,9 +555,9 @@ Cần làm:
 
 ---
 
-## 13. MCP_ONLY (bắt buộc)
+## 14. MCP_ONLY (bắt buộc)
 
-1. **Chỉ** gọi tool trong frontmatter (`80` tool `local-coding-tools/*`).
+1. **Chỉ** gọi tool trong frontmatter (`82` tool `local-coding-tools/*`).
 2. **Không** gọi `execute/*`, `read/readFile`, `edit/editFiles`, `search/codebase`, `search/textSearch`, `runInTerminal`, `sendToTerminal` khi MCP có tool thay thế.
 3. **Không** chạy `npm`, `pnpm`, `node`, `git`, `powershell` qua shell — dùng `run_project_script`, `run_safe_command`, hoặc `run_coding_session`.
 4. Trước file lớn: `search_workspace` / `semantic_search` / `glob_workspace` → `estimate_tool_output` → `read_workspace_file` (`startLine` + `lineCount`).
@@ -522,7 +568,7 @@ Cần làm:
 
 ---
 
-## 14. TODO_AUTO (bắt buộc — task nhiều bước)
+## 15. TODO_AUTO (bắt buộc — task nhiều bước)
 
 Task ≥2 thao tác MCP: `todo_read` → `todo_write` (một `in_progress`) → sau mỗi bước `todo_write` `merge: true` → trước báo xong `todo_read` (mọi todo `completed`/`cancelled`).
 
@@ -530,7 +576,7 @@ Lưu tại `.mcp-debug/todos.json` — vẫn **phải** gọi tool.
 
 ---
 
-## Danh sách đủ 80 tool (chuẩn server)
+## Danh sách đủ 82 tool (chuẩn server)
 
-``analyze_typography`, `apply_patch`, `audit_accessibility`, `audit_responsive`, `capture_screenshot`, `check_image_dependencies`, `check_js_syntax`, `check_system`, `check_url`, `check_workspace`, `chrome_load_extension`, `clear_session_context`, `collect_debug_bundle`, `compare_images`, `copy_workspace_file`, `create_directory`, `delete_pattern`, `delete_workspace_file`, `edit_notebook`, `estimate_tool_output`, `extract_design_tokens`, `fetch_cached_output`, `fetch_icon_svg`, `fetch_url`, `file_stats`, `generate_image`, `generate_palette`, `get_session_context`, `git_add`, `git_branch`, `git_checkout`, `git_commit`, `git_init`, `git_merge`, `git_pull`, `git_push`, `git_status`, `glob_workspace`, `http_request`, `image_adjust`, `image_batch`, `image_composite`, `image_crop`, `image_info`, `image_ocr`, `image_remove_background`, `image_resize`, `image_rounded`, `image_text`, `image_upscale`, `image_upscale_ai`, `list_scripts`, `list_ui_components`, `list_workspace_tree`, `move_workspace_file`, `page_audit`, `playwright_act`, `playwright_close`, `playwright_navigate`, `playwright_screenshot`, `playwright_snapshot`, `preview_html`, `read_binary_file`, `read_devgol_guide`, `read_lints`, `read_project_info`, `read_workspace_file`, `run_coding_session`, `run_format`, `run_project_script`, `run_safe_command`, `score_ui_devgol`, `search_web`, `search_workspace`, `semantic_search`, `suggest_ui_pattern`, `summarize_tool_history`, `todo_read`, `todo_write`, `write_workspace_file``
+``analyze_typography`, `apply_patch`, `audit_accessibility`, `audit_responsive`, `capture_screenshot`, `check_image_dependencies`, `check_js_syntax`, `check_system`, `check_url`, `check_workspace`, `chrome_load_extension`, `clear_session_context`, `collect_debug_bundle`, `compare_images`, `copy_workspace_file`, `create_directory`, `delete_pattern`, `delete_workspace_file`, `edit_notebook`, `estimate_tool_output`, `extract_design_tokens`, `fetch_cached_output`, `fetch_icon_svg`, `fetch_url`, `file_stats`, `generate_image`, `generate_palette`, `get_session_context`, `git_add`, `git_branch`, `git_checkout`, `git_commit`, `git_init`, `git_merge`, `git_pull`, `git_push`, `git_status`, `glob_workspace`, `http_request`, `image_adjust`, `image_batch`, `image_composite`, `image_crop`, `image_info`, `image_ocr`, `image_remove_background`, `image_resize`, `image_rounded`, `image_text`, `image_upscale`, `image_upscale_ai`, `list_scripts`, `list_ui_components`, `list_workspace_tree`, `move_workspace_file`, `page_audit`, `playwright_act`, `playwright_close`, `playwright_navigate`, `playwright_screenshot`, `playwright_snapshot`, `preview_html`, `read_binary_file`, `read_devgol_guide`, `read_lints`, `read_project_info`, `read_project_memory`, `read_workspace_file`, `run_coding_session`, `run_format`, `run_project_script`, `run_safe_command`, `score_ui_devgol`, `search_web`, `search_workspace`, `semantic_search`, `suggest_ui_pattern`, `summarize_tool_history`, `todo_read`, `todo_write`, `write_project_memory`, `write_workspace_file``
 

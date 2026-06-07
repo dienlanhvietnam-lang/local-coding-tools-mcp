@@ -230,6 +230,15 @@ async function runHardTests(client, box) {
   record(results, "todo_read", parseResult(await callToolSafe(client, "todo_read", {
     workspacePath: box,
   })));
+  record(results, "read_project_memory", parseResult(await callToolSafe(client, "read_project_memory", {
+    workspacePath: box,
+  })));
+  record(results, "write_project_memory", parseResult(await callToolSafe(client, "write_project_memory", {
+    workspacePath: box, action: "append_lesson", lesson: "hard-test memory lesson",
+  })));
+  record(results, "get_session_context", parseResult(await callToolSafe(client, "get_session_context", {
+    workspacePath: box,
+  })));
   await callToolSafe(client, "write_workspace_file", {
     workspacePath: box,
     relativePath: "sample.ipynb",

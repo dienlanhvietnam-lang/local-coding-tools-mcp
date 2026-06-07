@@ -66,6 +66,7 @@ export const EXPECTED_TOOLS = [
   "read_devgol_guide",
   "read_lints",
   "read_project_info",
+  "read_project_memory",
   "read_workspace_file",
   "run_coding_session",
   "run_format",
@@ -79,6 +80,7 @@ export const EXPECTED_TOOLS = [
   "summarize_tool_history",
   "todo_read",
   "todo_write",
+  "write_project_memory",
   "write_workspace_file",
 ] as const;
 

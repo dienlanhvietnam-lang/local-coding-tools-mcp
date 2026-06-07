@@ -21,7 +21,7 @@ const agentBody = bodyTemplate
 
 const body = `---
 name: DMCTN-MCP
-description: Agent kỹ thuật — ${EXPECTED_TOOL_COUNT} MCP tools, MCP_ONLY, TODO_AUTO, báo cáo Verdict/Evidence.
+description: Agent kỹ thuật — ${EXPECTED_TOOL_COUNT} MCP tools, MEMORY_LOOP, MCP_ONLY, TODO_AUTO, Verdict/Evidence.
 tools:
 ${toolYaml}
 ---

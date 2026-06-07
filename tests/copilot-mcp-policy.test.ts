@@ -56,6 +56,8 @@ describe("copilot MCP force policy installer R1", () => {
     expect(agent).toMatch(/MCP_ONLY|BẮT BUỘC/);
     expect(agent).toContain("TODO_AUTO");
     expect(agent).toContain("RESPONSE_STYLE");
+    expect(agent).toContain("MEMORY_LOOP");
+    expect(agent).toContain("read_project_memory");
     expect(agent).toContain("UI_DESIGN_LOOP");
     expect(agent).toContain("local-coding-tools/capture_screenshot");
 

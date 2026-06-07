@@ -6,6 +6,13 @@ const SESSION_REL = ".mcp-debug/session.json";
 const MAX_SEARCHES = 10;
 const MAX_READS = 30;
 const MAX_SUMMARIES = 50;
+const MAX_FAILURES = 20;
+
+export interface RecordedFailure {
+  tool: string;
+  error: string;
+  at: string;
+}
 
 export interface RecordedSearch {
   query: string;
@@ -32,6 +39,7 @@ export interface SessionContext {
   sessionId: string;
   lastSearches: RecordedSearch[];
   lastReads: RecordedRead[];
+  recentFailures: RecordedFailure[];
   toolSummaries: RecordedToolSummary[];
   updatedAt: string;
 }
@@ -41,6 +49,7 @@ function emptySession(): SessionContext {
     sessionId: randomUUID(),
     lastSearches: [],
     lastReads: [],
+    recentFailures: [],
     toolSummaries: [],
     updatedAt: new Date().toISOString(),
   };
@@ -65,6 +74,7 @@ export function loadSession(workspacePath: string): SessionContext {
       sessionId: parsed.sessionId ?? randomUUID(),
       lastSearches: parsed.lastSearches ?? [],
       lastReads: parsed.lastReads ?? [],
+      recentFailures: parsed.recentFailures ?? [],
       toolSummaries: parsed.toolSummaries ?? [],
       updatedAt: parsed.updatedAt ?? new Date().toISOString(),
     };
@@ -112,6 +122,21 @@ export function recordRead(
     at: new Date().toISOString(),
   });
   session.lastReads = session.lastReads.slice(0, MAX_READS);
+  saveSession(workspacePath, session);
+}
+
+export function recordFailure(
+  workspacePath: string,
+  failure: { tool: string; error: string }
+): void {
+  const session = loadSession(workspacePath);
+  const error = failure.error.trim().slice(0, 300);
+  session.recentFailures.unshift({
+    tool: failure.tool,
+    error,
+    at: new Date().toISOString(),
+  });
+  session.recentFailures = session.recentFailures.slice(0, MAX_FAILURES);
   saveSession(workspacePath, session);
 }
 

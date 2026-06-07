@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { TOOL_CALL_LOG_PATH } from "./config.js";
-import { recordSearch, recordRead, recordToolSummary } from "./session/contextBank.js";
+import { recordSearch, recordRead, recordToolSummary, recordFailure } from "./session/contextBank.js";
+import { appendFailure } from "./session/projectMemory.js";
 
 export type RiskLevel = "low" | "medium" | "high";
 
@@ -36,13 +37,38 @@ export function logToolCall(entry: Omit<ToolCallLogEntry, "time">): void {
   }
 }
 
+function recordToolFailure(
+  toolName: string,
+  workspacePath: string,
+  result: unknown
+): void {
+  if (typeof result !== "object" || result === null) return;
+  const r = result as Record<string, unknown>;
+  const error =
+    typeof r.error === "string"
+      ? r.error
+      : typeof r.reason === "string"
+        ? r.reason
+        : "tool failed";
+  try {
+    recordFailure(workspacePath, { tool: toolName, error });
+    appendFailure(workspacePath, { tool: toolName, error, doNotRetry: true });
+  } catch {
+    // never break tools
+  }
+}
+
 function updateSessionFromResult(
   toolName: string,
   workspacePath: string | undefined,
   status: string,
   result: unknown
 ): void {
-  if (!workspacePath || status === "FAIL" || status === "BLOCKED") return;
+  if (!workspacePath) return;
+  if (status === "FAIL" || status === "BLOCKED") {
+    recordToolFailure(toolName, workspacePath, result);
+    return;
+  }
   if (typeof result !== "object" || result === null) return;
   const r = result as Record<string, unknown>;
   try {
@@ -116,6 +142,9 @@ export function withToolLogging<T>(
         blocked: false,
         error: message,
       });
+      if (options.workspacePath) {
+        recordToolFailure(toolName, options.workspacePath, { error: message });
+      }
       throw err;
     });
 }

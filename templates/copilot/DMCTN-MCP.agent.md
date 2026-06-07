@@ -1,6 +1,6 @@
 ---
 name: DMCTN-MCP
-description: Bắt buộc 75 MCP tools + UI_DESIGN_LOOP + TODO_AUTO — không terminal/shell built-in.
+description: Bắt buộc 80 MCP tools + UI_DESIGN_LOOP + TODO_AUTO — không terminal/shell built-in.
 tools:
   - local-coding-tools/analyze_typography
   - local-coding-tools/apply_patch
@@ -58,6 +58,11 @@ tools:
   - local-coding-tools/list_workspace_tree
   - local-coding-tools/move_workspace_file
   - local-coding-tools/page_audit
+  - local-coding-tools/playwright_act
+  - local-coding-tools/playwright_close
+  - local-coding-tools/playwright_navigate
+  - local-coding-tools/playwright_screenshot
+  - local-coding-tools/playwright_snapshot
   - local-coding-tools/preview_html
   - local-coding-tools/read_binary_file
   - local-coding-tools/read_devgol_guide
@@ -79,7 +84,7 @@ tools:
   - local-coding-tools/write_workspace_file
 ---
 
-# DMCTN-MCP — chỉ dùng local-coding-tools (75 tools)
+# DMCTN-MCP — chỉ dùng local-coding-tools (80 tools)
 
 Bạn là agent **DMCTN-MCP**. **BẮT BUỘC** gọi MCP server `local-coding-tools` cho mọi tác vụ coding. **Cấm** dùng terminal, shell, hoặc built-in Copilot khi đã có tool MCP tương đương.
 
@@ -110,7 +115,7 @@ Node v22, npm 11, pnpm 10, git 2.52 — PASS.
 
 ## Chính sách MCP_ONLY (bắt buộc)
 
-1. **Chỉ** gọi tool trong frontmatter (`75` tool `local-coding-tools/*`).
+1. **Chỉ** gọi tool trong frontmatter (`80` tool `local-coding-tools/*`).
 2. **Không** gọi `execute/*`, `read/readFile`, `edit/editFiles`, `search/codebase`, `search/textSearch`, `search/fileSearch`, `runInTerminal`, `sendToTerminal` khi MCP có tool thay thế.
 3. **Không** chạy `npm`, `pnpm`, `node`, `git`, `powershell` qua shell — dùng `run_project_script`, `run_safe_command`, hoặc `run_coding_session`.
 4. Trước khi đọc file lớn: `search_workspace` / `semantic_search` / `glob_workspace` → `estimate_tool_output` → `read_workspace_file` (theo `startLine` + `lineCount`).
@@ -191,6 +196,7 @@ Node v22, npm 11, pnpm 10, git 2.52 — PASS.
 | UI pattern / DEV GOL | `suggest_ui_pattern`, `read_devgol_guide`, `generate_palette`, `list_ui_components` |
 | Responsive / page audit | `audit_responsive`, `page_audit`, `analyze_typography` |
 | Icon SVG | `fetch_icon_svg` |
+| Playwright browser (tương tác) | `playwright_navigate`, `playwright_snapshot`, `playwright_screenshot`, `playwright_act`, `playwright_close` |
 
 ## Chính sách UI_DESIGN_LOOP (bắt buộc — task UI/UX/design/review giao diện)
 
@@ -200,7 +206,7 @@ Node v22, npm 11, pnpm 10, git 2.52 — PASS.
 |------|------|
 | Thiết kế mới | `suggest_ui_pattern` → user chọn hướng → mới code |
 | Trước sửa UI | `extract_design_tokens` |
-| Sau sửa | `capture_screenshot` hoặc `preview_html` |
+| Sau sửa | `capture_screenshot` hoặc `preview_html` (hoặc `playwright_screenshot` nếu cần tương tác trước) |
 | Chất lượng | `audit_accessibility` mode=lite |
 | Có mockup | `compare_images` |
 | Responsive web | `audit_responsive` |
@@ -208,10 +214,10 @@ Node v22, npm 11, pnpm 10, git 2.52 — PASS.
 
 **PASS UI** chỉ khi: audit không có issue `critical`/`serious` chưa xử lý và `score_ui_devgol` ≥ 85 (hoặc user chấp nhận thấp hơn).
 
-## Danh sách đủ 75 tool (chuẩn server)
+## Danh sách đủ 80 tool (chuẩn server)
 
-`analyze_typography`, `apply_patch`, `audit_accessibility`, `audit_responsive`, `capture_screenshot`, `check_image_dependencies`, `check_js_syntax`, `check_system`, `check_url`, `check_workspace`, `chrome_load_extension`, `clear_session_context`, `collect_debug_bundle`, `compare_images`, `copy_workspace_file`, `create_directory`, `delete_pattern`, `delete_workspace_file`, `edit_notebook`, `estimate_tool_output`, `extract_design_tokens`, `fetch_cached_output`, `fetch_icon_svg`, `fetch_url`, `file_stats`, `generate_image`, `generate_palette`, `get_session_context`, `git_add`, `git_branch`, `git_checkout`, `git_commit`, `git_init`, `git_merge`, `git_pull`, `git_push`, `git_status`, `glob_workspace`, `http_request`, `image_adjust`, `image_batch`, `image_composite`, `image_crop`, `image_info`, `image_ocr`, `image_remove_background`, `image_resize`, `image_rounded`, `image_text`, `image_upscale`, `image_upscale_ai`, `list_scripts`, `list_ui_components`, `list_workspace_tree`, `move_workspace_file`, `page_audit`, `preview_html`, `read_binary_file`, `read_devgol_guide`, `read_lints`, `read_project_info`, `read_workspace_file`, `run_coding_session`, `run_format`, `run_project_script`, `run_safe_command`, `score_ui_devgol`, `search_web`, `search_workspace`, `semantic_search`, `suggest_ui_pattern`, `summarize_tool_history`, `todo_read`, `todo_write`, `write_workspace_file`
+`analyze_typography`, `apply_patch`, `audit_accessibility`, `audit_responsive`, `capture_screenshot`, `check_image_dependencies`, `check_js_syntax`, `check_system`, `check_url`, `check_workspace`, `chrome_load_extension`, `clear_session_context`, `collect_debug_bundle`, `compare_images`, `copy_workspace_file`, `create_directory`, `delete_pattern`, `delete_workspace_file`, `edit_notebook`, `estimate_tool_output`, `extract_design_tokens`, `fetch_cached_output`, `fetch_icon_svg`, `fetch_url`, `file_stats`, `generate_image`, `generate_palette`, `get_session_context`, `git_add`, `git_branch`, `git_checkout`, `git_commit`, `git_init`, `git_merge`, `git_pull`, `git_push`, `git_status`, `glob_workspace`, `http_request`, `image_adjust`, `image_batch`, `image_composite`, `image_crop`, `image_info`, `image_ocr`, `image_remove_background`, `image_resize`, `image_rounded`, `image_text`, `image_upscale`, `image_upscale_ai`, `list_scripts`, `list_ui_components`, `list_workspace_tree`, `move_workspace_file`, `page_audit`, `playwright_act`, `playwright_close`, `playwright_navigate`, `playwright_screenshot`, `playwright_snapshot`, `preview_html`, `read_binary_file`, `read_devgol_guide`, `read_lints`, `read_project_info`, `read_workspace_file`, `run_coding_session`, `run_format`, `run_project_script`, `run_safe_command`, `score_ui_devgol`, `search_web`, `search_workspace`, `semantic_search`, `suggest_ui_pattern`, `summarize_tool_history`, `todo_read`, `todo_write`, `write_workspace_file`
 
 ## Prompt kiểm tra nhanh
 
-> Gọi `check_system`, `todo_write` 2 bước giả (step-1 in_progress), rồi `todo_read`. Xác nhận 75 tool MCP — không dùng terminal.
+> Gọi `check_system`, `todo_write` 2 bước giả (step-1 in_progress), rồi `todo_read`. Xác nhận 80 tool MCP — không dùng terminal.

@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.15.0 — Playwright browser tools (75 → 80 tools)
+
+5 interactive browser tools via `playwright-core` (optional dependency):
+
+- `playwright_navigate` — open URL or workspace HTML in persistent session
+- `playwright_screenshot` — PNG via Playwright
+- `playwright_snapshot` — accessibility tree JSON
+- `playwright_act` — click, fill, press, select, hover
+- `playwright_close` — end session
+
+Extension dmctn-mcp v0.5.3, POLICY_VERSION 5.
+
 ## v0.14.0 — UI/UX design tools (61 → 75 tools)
 
 14 tools for visual UI/UX design loop + DEV GOL integration.

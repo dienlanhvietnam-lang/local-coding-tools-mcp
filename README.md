@@ -1,8 +1,12 @@
 # Local Coding Tools MCP
 
-**v0.14.0** — MCP stdio server: **coding + image editing + UI/UX design** cho Cursor / VS Code.
+**v0.15.0** — MCP stdio server: **coding + image editing + UI/UX design** cho Cursor / VS Code.
 
-**75 tools** | npm publish ready | winget template included
+**80 tools** | npm publish ready | winget template included
+
+## Playwright browser tools (v0.15.0)
+
+`playwright_navigate`, `playwright_screenshot`, `playwright_snapshot`, `playwright_act`, `playwright_close` — requires optional `playwright-core` (`npx playwright install chromium`).
 
 ## UI design tools (v0.14.0)
 

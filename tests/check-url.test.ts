@@ -21,6 +21,6 @@ describe("check_url", () => {
 
   it("httpUserAgent uses SERVER_VERSION", () => {
     expect(httpUserAgent()).toBe(`local-coding-tools-mcp/${SERVER_VERSION}`);
-    expect(SERVER_VERSION).toBe("0.14.0");
+    expect(SERVER_VERSION).toBe("0.15.0");
   });
 });

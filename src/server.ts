@@ -88,6 +88,11 @@ import { readDevgolGuide } from "./tools/readDevgolGuide.js";
 import { scoreUiDevgol } from "./tools/scoreUiDevgol.js";
 import { suggestUiPattern } from "./tools/suggestUiPattern.js";
 import { fetchIconSvg } from "./tools/fetchIconSvg.js";
+import { playwrightNavigate } from "./tools/playwrightNavigate.js";
+import { playwrightScreenshot } from "./tools/playwrightScreenshot.js";
+import { playwrightSnapshot } from "./tools/playwrightSnapshot.js";
+import { playwrightAct } from "./tools/playwrightAct.js";
+import { playwrightClose } from "./tools/playwrightClose.js";
 
 function jsonText(data: unknown): { content: Array<{ type: "text"; text: string }> } {
   return {
@@ -1509,6 +1514,105 @@ server.tool(
     jsonText(
       await withToolLogging("fetch_icon_svg", { workspacePath: args.workspacePath, riskLevel: "low" }, () =>
         fetchIconSvg(args)
+      )
+    )
+);
+
+server.tool(
+  "playwright_navigate",
+  "Open URL or workspace HTML in a Playwright Chromium session (persistent per workspace). SKIPPED if playwright-core missing.",
+  {
+    workspacePath: workspacePathSchema,
+    url: z.string().optional(),
+    relativePath: z.string().optional(),
+    viewport: z.enum(["mobile", "tablet", "desktop"]).optional(),
+    width: z.number().optional(),
+    height: z.number().optional(),
+    chromePath: z.string().optional(),
+    allowPublicHosts: z.boolean().optional(),
+    waitUntil: z.enum(["load", "domcontentloaded", "networkidle"]).optional(),
+    timeoutMs: z.number().optional(),
+  },
+  UI_EXECUTE,
+  async (args) =>
+    jsonText(
+      await withToolLogging("playwright_navigate", { workspacePath: args.workspacePath, riskLevel: "medium" }, () =>
+        playwrightNavigate(args)
+      )
+    )
+);
+
+server.tool(
+  "playwright_screenshot",
+  "PNG screenshot via active Playwright session or after navigate. SKIPPED if playwright-core missing.",
+  {
+    workspacePath: workspacePathSchema,
+    url: z.string().optional(),
+    relativePath: z.string().optional(),
+    outputRelativePath: z.string().optional(),
+    fullPage: z.boolean().optional(),
+    viewport: z.enum(["mobile", "tablet", "desktop"]).optional(),
+    width: z.number().optional(),
+    height: z.number().optional(),
+    chromePath: z.string().optional(),
+    allowPublicHosts: z.boolean().optional(),
+    timeoutMs: z.number().optional(),
+  },
+  UI_EXECUTE,
+  async (args) =>
+    jsonText(
+      await withToolLogging("playwright_screenshot", { workspacePath: args.workspacePath, riskLevel: "medium" }, () =>
+        playwrightScreenshot(args)
+      )
+    )
+);
+
+server.tool(
+  "playwright_snapshot",
+  "Accessibility tree snapshot of the active Playwright page (JSON). Requires playwright_navigate first.",
+  {
+    workspacePath: workspacePathSchema,
+    maxChars: z.number().optional(),
+  },
+  UI_READ,
+  async (args) =>
+    jsonText(
+      await withToolLogging("playwright_snapshot", { workspacePath: args.workspacePath, riskLevel: "low" }, () =>
+        playwrightSnapshot(args)
+      )
+    )
+);
+
+server.tool(
+  "playwright_act",
+  "Interact with the active Playwright page: click, fill, press, select, hover.",
+  {
+    workspacePath: workspacePathSchema,
+    action: z.enum(["click", "fill", "press", "select", "hover"]),
+    selector: z.string(),
+    value: z.string().optional(),
+    timeoutMs: z.number().optional(),
+  },
+  UI_EXECUTE,
+  async (args) =>
+    jsonText(
+      await withToolLogging("playwright_act", { workspacePath: args.workspacePath, riskLevel: "medium" }, () =>
+        playwrightAct(args)
+      )
+    )
+);
+
+server.tool(
+  "playwright_close",
+  "Close Playwright browser session for this workspace.",
+  {
+    workspacePath: workspacePathSchema,
+  },
+  UI_EXECUTE,
+  async (args) =>
+    jsonText(
+      await withToolLogging("playwright_close", { workspacePath: args.workspacePath, riskLevel: "low" }, () =>
+        playwrightClose(args)
       )
     )
 );

@@ -341,6 +341,21 @@ async function runHardTests(client, box) {
   record(results, "fetch_icon_svg", parseResult(await callToolSafe(client, "fetch_icon_svg", {
     workspacePath: box, library: "lucide", iconName: "check",
   })));
+  record(results, "playwright_navigate", parseResult(await callToolSafe(client, "playwright_navigate", {
+    workspacePath: box, relativePath: uiRel,
+  })));
+  record(results, "playwright_snapshot", parseResult(await callToolSafe(client, "playwright_snapshot", {
+    workspacePath: box,
+  })));
+  record(results, "playwright_screenshot", parseResult(await callToolSafe(client, "playwright_screenshot", {
+    workspacePath: box, outputRelativePath: ".mcp-debug/hard-pw-screenshot.png",
+  })));
+  record(results, "playwright_act", parseResult(await callToolSafe(client, "playwright_act", {
+    workspacePath: box, action: "click", selector: "button",
+  })));
+  record(results, "playwright_close", parseResult(await callToolSafe(client, "playwright_close", {
+    workspacePath: box,
+  })));
 
   // Last: optional nobg may crash native deps on some Windows hosts — isolate after core tools.
   const nobg = parseResult(await callToolSafe(client, "image_remove_background", {

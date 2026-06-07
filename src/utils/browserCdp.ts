@@ -375,9 +375,10 @@ export async function runPlaywrightAxeAudit(
   });
 
   try {
-    const page = await browser.newPage({
+    const context = await browser.newContext({
       viewport: { width: options.viewport.width, height: options.viewport.height },
     });
+    const page = await context.newPage();
     await page.goto(targetUrl, { waitUntil: "networkidle", timeout: options.timeoutMs ?? 30000 });
     const results = await new AxeBuilder({ page }).analyze();
     const issues = results.violations.flatMap((v, vi) =>

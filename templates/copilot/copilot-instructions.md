@@ -1,6 +1,6 @@
-# Copilot instructions — BẮT BUỘC dùng MCP local-coding-tools (75 tools)
+# Copilot instructions — BẮT BUỘC dùng MCP local-coding-tools (80 tools)
 
-Workspace này dùng MCP server **local-coding-tools** (v0.14.x, **75 tools**). Trong Copilot Chat **phải** chọn agent **DMCTN-MCP**.
+Workspace này dùng MCP server **local-coding-tools** (v0.15.x, **80 tools**). Trong Copilot Chat **phải** chọn agent **DMCTN-MCP**.
 
 ## RESPONSE_STYLE — gọn, đúng câu hỏi, không icon
 
@@ -21,7 +21,7 @@ Workspace này dùng MCP server **local-coding-tools** (v0.14.x, **75 tools**). 
 Khi thiết kế/sửa/review giao diện:
 
 1. `extract_design_tokens` trước khi sửa
-2. `capture_screenshot` hoặc `preview_html` sau khi sửa
+2. `capture_screenshot` hoặc `preview_html` sau khi sửa (hoặc `playwright_*` khi cần tương tác)
 3. `audit_accessibility` mode=lite
 4. `score_ui_devgol` trước báo xong (≥ 85)
 5. Thiết kế mới: `suggest_ui_pattern` trước khi code
@@ -40,6 +40,7 @@ Khi thiết kế/sửa/review giao diện:
 | HTTP / web | `check_url`, `fetch_url`, `http_request`, `search_web` |
 | ảnh | `image_*`, `check_image_dependencies`, `generate_image` |
 | UI/UX review | `capture_screenshot`, `preview_html`, `audit_accessibility`, `compare_images`, `score_ui_devgol` |
+| Playwright browser | `playwright_navigate`, `playwright_snapshot`, `playwright_screenshot`, `playwright_act`, `playwright_close` |
 | output lớn / cache | `fetch_cached_output`, `estimate_tool_output` |
 | tiếp tục phiên | `get_session_context`, `summarize_tool_history` |
 

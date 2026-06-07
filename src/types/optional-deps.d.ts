@@ -12,13 +12,37 @@ declare module "pngjs" {
 }
 
 declare module "playwright-core" {
+  export interface Page {
+    goto(url: string, options?: Record<string, unknown>): Promise<unknown>;
+    url(): string;
+    title(): Promise<string>;
+    screenshot(options?: Record<string, unknown>): Promise<Buffer | void>;
+    locator(selector: string): {
+      first(): {
+        click(options?: Record<string, unknown>): Promise<void>;
+        fill(value: string, options?: Record<string, unknown>): Promise<void>;
+        press(key: string, options?: Record<string, unknown>): Promise<void>;
+        selectOption(value: string, options?: Record<string, unknown>): Promise<void>;
+        hover(options?: Record<string, unknown>): Promise<void>;
+      };
+    };
+    accessibility: {
+      snapshot(): Promise<unknown>;
+    };
+  }
+
+  export interface BrowserContext {
+    newPage(): Promise<Page>;
+    close(): Promise<void>;
+  }
+
+  export interface Browser {
+    newContext(options?: Record<string, unknown>): Promise<BrowserContext>;
+    close(): Promise<void>;
+  }
+
   export const chromium: {
-    launch(options?: Record<string, unknown>): Promise<{
-      newPage(options?: Record<string, unknown>): Promise<{
-        goto(url: string, options?: Record<string, unknown>): Promise<void>;
-      }>;
-      close(): Promise<void>;
-    }>;
+    launch(options?: Record<string, unknown>): Promise<Browser>;
   };
 }
 

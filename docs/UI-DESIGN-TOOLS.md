@@ -1,6 +1,18 @@
-# UI Design Tools (v0.14.0)
+# UI Design Tools (v0.15.0)
 
-14 tools for UI/UX design loop — 75 tools total.
+14 tools for UI/UX design loop + 5 Playwright browser tools — 80 tools total.
+
+## Playwright browser (v0.15.0)
+
+| Tool | Purpose |
+|------|---------|
+| `playwright_navigate` | Open URL/HTML in persistent Chromium session |
+| `playwright_screenshot` | PNG screenshot (full page optional) |
+| `playwright_snapshot` | Accessibility tree for agent |
+| `playwright_act` | click / fill / press / select / hover |
+| `playwright_close` | Close session |
+
+Install: `npx playwright install chromium` or `scripts/install-ui-design-deps.ps1 -InstallPlaywright`
 
 ## Visual feedback
 

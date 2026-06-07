@@ -129,6 +129,7 @@ Node v22, npm 11, pnpm 10, git 2.52 — PASS.
 | UI pattern / DEV GOL | \`suggest_ui_pattern\`, \`read_devgol_guide\`, \`generate_palette\`, \`list_ui_components\` |
 | Responsive / page audit | \`audit_responsive\`, \`page_audit\`, \`analyze_typography\` |
 | Icon SVG | \`fetch_icon_svg\` |
+| Playwright browser (tương tác) | \`playwright_navigate\`, \`playwright_snapshot\`, \`playwright_screenshot\`, \`playwright_act\`, \`playwright_close\` |
 
 ## Chính sách UI_DESIGN_LOOP (bắt buộc — task UI/UX/design/review giao diện)
 
@@ -138,7 +139,7 @@ Node v22, npm 11, pnpm 10, git 2.52 — PASS.
 |------|------|
 | Thiết kế mới | \`suggest_ui_pattern\` → user chọn hướng → mới code |
 | Trước sửa UI | \`extract_design_tokens\` |
-| Sau sửa | \`capture_screenshot\` hoặc \`preview_html\` |
+| Sau sửa | \`capture_screenshot\` hoặc \`preview_html\` (hoặc \`playwright_screenshot\` nếu cần tương tác trước) |
 | Chất lượng | \`audit_accessibility\` mode=lite |
 | Có mockup | \`compare_images\` |
 | Responsive web | \`audit_responsive\` |

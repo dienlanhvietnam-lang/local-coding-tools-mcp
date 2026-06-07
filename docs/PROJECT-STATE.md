@@ -10,7 +10,7 @@
 |-------|-------|
 | Package | `local-coding-tools-mcp` |
 | Version | `0.11.2` |
-| MCP tools | **61** |
+| MCP tools | **75** |
 | npm publish | **Not released** |
 | winget | **Not released** |
 

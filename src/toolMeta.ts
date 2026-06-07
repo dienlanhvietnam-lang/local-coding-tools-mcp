@@ -15,3 +15,6 @@ export const BATCH = NO_APPROVAL_FRICTION;
 export const IMAGE_READ = NO_APPROVAL_FRICTION;
 export const IMAGE_WRITE = NO_APPROVAL_FRICTION;
 export const IMAGE_NETWORK = { ...NO_APPROVAL_FRICTION, openWorldHint: true };
+export const UI_READ = NO_APPROVAL_FRICTION;
+export const UI_WRITE = NO_APPROVAL_FRICTION;
+export const UI_EXECUTE = { ...NO_APPROVAL_FRICTION, openWorldHint: true };

@@ -4,7 +4,19 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { SERVER_NAME, SERVER_VERSION } from "./config.js";
 import { withToolLogging } from "./logger.js";
-import { READ_ONLY, WRITE, EXECUTE, NETWORK, BATCH, IMAGE_READ, IMAGE_WRITE, IMAGE_NETWORK } from "./toolMeta.js";
+import {
+  READ_ONLY,
+  WRITE,
+  EXECUTE,
+  NETWORK,
+  BATCH,
+  IMAGE_READ,
+  IMAGE_WRITE,
+  IMAGE_NETWORK,
+  UI_READ,
+  UI_WRITE,
+  UI_EXECUTE,
+} from "./toolMeta.js";
 import { checkSystem } from "./tools/checkSystem.js";
 import { checkWorkspace } from "./tools/checkWorkspace.js";
 import { readProjectInfo } from "./tools/readProjectInfo.js";
@@ -62,6 +74,20 @@ import { maybeCache } from "./utils/maybeCache.js";
 import { getSessionContext, clearSessionContext } from "./tools/sessionContext.js";
 import { estimateToolOutput } from "./tools/estimateToolOutput.js";
 import { summarizeToolHistory } from "./tools/summarizeToolHistory.js";
+import { captureScreenshot } from "./tools/captureScreenshot.js";
+import { previewHtml } from "./tools/previewHtml.js";
+import { auditAccessibility } from "./tools/auditAccessibility.js";
+import { extractDesignTokens } from "./tools/extractDesignTokens.js";
+import { compareImages } from "./tools/compareImages.js";
+import { analyzeTypography } from "./tools/analyzeTypography.js";
+import { generatePalette } from "./tools/generatePalette.js";
+import { auditResponsive } from "./tools/auditResponsive.js";
+import { listUiComponents } from "./tools/listUiComponents.js";
+import { pageAudit } from "./tools/pageAudit.js";
+import { readDevgolGuide } from "./tools/readDevgolGuide.js";
+import { scoreUiDevgol } from "./tools/scoreUiDevgol.js";
+import { suggestUiPattern } from "./tools/suggestUiPattern.js";
+import { fetchIconSvg } from "./tools/fetchIconSvg.js";
 
 function jsonText(data: unknown): { content: Array<{ type: "text"; text: string }> } {
   return {
@@ -1217,6 +1243,272 @@ server.tool(
     jsonText(
       await withToolLogging("summarize_tool_history", { workspacePath, riskLevel: "low" }, () =>
         summarizeToolHistory({ workspacePath, limit })
+      )
+    )
+);
+
+server.tool(
+  "capture_screenshot",
+  "Capture PNG screenshot of URL or workspace HTML via headless Chrome/Edge (CDP). SKIPPED if browser not found.",
+  {
+    workspacePath: workspacePathSchema,
+    url: z.string().optional().describe("http(s) URL — localhost/private by default"),
+    relativePath: z.string().optional().describe("Workspace HTML file path"),
+    viewport: z.enum(["mobile", "tablet", "desktop"]).optional(),
+    width: z.number().optional(),
+    height: z.number().optional(),
+    outputRelativePath: z.string().optional(),
+    chromePath: z.string().optional(),
+    allowPublicHosts: z.boolean().optional(),
+    timeoutMs: z.number().optional(),
+  },
+  UI_EXECUTE,
+  async (args) =>
+    jsonText(
+      await withToolLogging("capture_screenshot", { workspacePath: args.workspacePath, riskLevel: "medium" }, () =>
+        captureScreenshot(args)
+      )
+    )
+);
+
+server.tool(
+  "preview_html",
+  "Render workspace HTML or snippet to PNG screenshot. No dev server required.",
+  {
+    workspacePath: workspacePathSchema,
+    relativePath: z.string().optional(),
+    htmlSnippet: z.string().optional(),
+    viewport: z.enum(["mobile", "tablet", "desktop"]).optional(),
+    width: z.number().optional(),
+    height: z.number().optional(),
+    outputRelativePath: z.string().optional(),
+    chromePath: z.string().optional(),
+    timeoutMs: z.number().optional(),
+  },
+  UI_EXECUTE,
+  async (args) =>
+    jsonText(
+      await withToolLogging("preview_html", { workspacePath: args.workspacePath, riskLevel: "medium" }, () =>
+        previewHtml(args)
+      )
+    )
+);
+
+server.tool(
+  "audit_accessibility",
+  "Accessibility audit — lite (CDP) or full (Playwright+axe). SKIPPED if browser/deps missing.",
+  {
+    workspacePath: workspacePathSchema,
+    url: z.string().optional(),
+    relativePath: z.string().optional(),
+    mode: z.enum(["lite", "full"]).optional(),
+    viewport: z.enum(["mobile", "tablet", "desktop"]).optional(),
+    chromePath: z.string().optional(),
+    allowPublicHosts: z.boolean().optional(),
+    timeoutMs: z.number().optional(),
+  },
+  UI_EXECUTE,
+  async (args) =>
+    jsonText(
+      await withToolLogging("audit_accessibility", { workspacePath: args.workspacePath, riskLevel: "low" }, () =>
+        auditAccessibility(args)
+      )
+    )
+);
+
+server.tool(
+  "extract_design_tokens",
+  "Extract colors, typography, spacing, radius from CSS/Tailwind/theme files.",
+  {
+    workspacePath: workspacePathSchema,
+    sources: z.array(z.string()).optional().describe("Glob paths — defaults to **/*.css, tailwind.config.*"),
+  },
+  UI_READ,
+  async ({ workspacePath, sources }) =>
+    jsonText(
+      await withToolLogging("extract_design_tokens", { workspacePath, riskLevel: "low" }, () =>
+        extractDesignTokens({ workspacePath, sources })
+      )
+    )
+);
+
+server.tool(
+  "compare_images",
+  "Pixel-diff two workspace images — diffPercent and optional heatmap PNG.",
+  {
+    workspacePath: workspacePathSchema,
+    referenceRelativePath: z.string(),
+    actualRelativePath: z.string(),
+    threshold: z.number().optional().describe("0-1 pixelmatch threshold (default 0.1)"),
+    outputDiffRelativePath: z.string().optional(),
+  },
+  UI_READ,
+  async (args) =>
+    jsonText(
+      await withToolLogging("compare_images", { workspacePath: args.workspacePath, riskLevel: "low" }, () =>
+        compareImages(args)
+      )
+    )
+);
+
+server.tool(
+  "analyze_typography",
+  "Analyze font families, sizes, line-heights from CSS files and suggest scale improvements.",
+  {
+    workspacePath: workspacePathSchema,
+    sources: z.array(z.string()).optional(),
+  },
+  UI_READ,
+  async ({ workspacePath, sources }) =>
+    jsonText(
+      await withToolLogging("analyze_typography", { workspacePath, riskLevel: "low" }, () =>
+        analyzeTypography({ workspacePath, sources })
+      )
+    )
+);
+
+server.tool(
+  "generate_palette",
+  "Generate light/dark palette from seed color or dominant image color — CSS variables + Tailwind extend.",
+  {
+    workspacePath: workspacePathSchema,
+    seedColor: z.string().optional().describe("#RRGGBB"),
+    extractFromImage: z.string().optional().describe("Workspace image path"),
+  },
+  UI_READ,
+  async (args) =>
+    jsonText(
+      await withToolLogging("generate_palette", { workspacePath: args.workspacePath, riskLevel: "low" }, () =>
+        generatePalette(args)
+      )
+    )
+);
+
+server.tool(
+  "audit_responsive",
+  "Screenshot + overflow check at multiple breakpoints. SKIPPED if browser not found.",
+  {
+    workspacePath: workspacePathSchema,
+    url: z.string(),
+    breakpoints: z.array(z.number()).optional(),
+    chromePath: z.string().optional(),
+    allowPublicHosts: z.boolean().optional(),
+    timeoutMs: z.number().optional(),
+  },
+  UI_EXECUTE,
+  async (args) =>
+    jsonText(
+      await withToolLogging("audit_responsive", { workspacePath: args.workspacePath, riskLevel: "medium" }, () =>
+        auditResponsive(args)
+      )
+    )
+);
+
+server.tool(
+  "list_ui_components",
+  "Inventory PascalCase UI components in components/ dirs with story/props detection.",
+  {
+    workspacePath: workspacePathSchema,
+    scanDirs: z.array(z.string()).optional(),
+  },
+  UI_READ,
+  async ({ workspacePath, scanDirs }) =>
+    jsonText(
+      await withToolLogging("list_ui_components", { workspacePath, riskLevel: "low" }, () =>
+        listUiComponents({ workspacePath, scanDirs })
+      )
+    )
+);
+
+server.tool(
+  "page_audit",
+  "Page audit lite (CDP metrics + a11y) or full (Playwright + optional Lighthouse).",
+  {
+    workspacePath: workspacePathSchema,
+    url: z.string(),
+    mode: z.enum(["lite", "full"]).optional(),
+    categories: z.array(z.string()).optional(),
+    chromePath: z.string().optional(),
+    allowPublicHosts: z.boolean().optional(),
+    timeoutMs: z.number().optional(),
+  },
+  UI_EXECUTE,
+  async (args) =>
+    jsonText(
+      await withToolLogging("page_audit", { workspacePath: args.workspacePath, riskLevel: "medium" }, () =>
+        pageAudit(args)
+      )
+    )
+);
+
+server.tool(
+  "read_devgol_guide",
+  "Read DEV GOL UI/UX guide (scorecard, benchmark, patterns) — workspace override or bundled.",
+  {
+    workspacePath: workspacePathSchema,
+    topic: z.enum(["scorecard", "benchmark", "patterns", "trend"]),
+    productType: z.string().optional(),
+  },
+  UI_READ,
+  async ({ workspacePath, topic, productType }) =>
+    jsonText(
+      await withToolLogging("read_devgol_guide", { workspacePath, riskLevel: "low" }, () =>
+        readDevgolGuide({ workspacePath, topic, productType })
+      )
+    )
+);
+
+server.tool(
+  "score_ui_devgol",
+  "Score UI against DEV GOL checklist — a11y, states, components, visual. belowThreshold if < 85.",
+  {
+    workspacePath: workspacePathSchema,
+    screenshotRelativePath: z.string().optional(),
+    url: z.string().optional(),
+    relativePath: z.string().optional(),
+    productType: z.string().optional(),
+    checklistMode: z.enum(["quick", "full"]).optional(),
+  },
+  UI_READ,
+  async (args) =>
+    jsonText(
+      await withToolLogging("score_ui_devgol", { workspacePath: args.workspacePath, riskLevel: "low" }, () =>
+        scoreUiDevgol(args)
+      )
+    )
+);
+
+server.tool(
+  "suggest_ui_pattern",
+  "Suggest 3 UI directions (safe/modern/distinct) for product type — no code.",
+  {
+    workspacePath: workspacePathSchema,
+    productType: z.string().optional(),
+    tone: z.enum(["safe", "modern", "distinct"]).optional(),
+  },
+  UI_READ,
+  async ({ workspacePath, productType, tone }) =>
+    jsonText(
+      await withToolLogging("suggest_ui_pattern", { workspacePath, riskLevel: "low" }, () =>
+        suggestUiPattern({ workspacePath, productType, tone })
+      )
+    )
+);
+
+server.tool(
+  "fetch_icon_svg",
+  "Download SVG icon from Lucide/Heroicons/Phosphor CDN into workspace (sanitized).",
+  {
+    workspacePath: workspacePathSchema,
+    library: z.enum(["lucide", "heroicons", "phosphor"]),
+    iconName: z.string(),
+    outputRelativePath: z.string().optional(),
+  },
+  UI_WRITE,
+  async (args) =>
+    jsonText(
+      await withToolLogging("fetch_icon_svg", { workspacePath: args.workspacePath, riskLevel: "low" }, () =>
+        fetchIconSvg(args)
       )
     )
 );

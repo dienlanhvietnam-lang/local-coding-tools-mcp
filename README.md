@@ -1,8 +1,20 @@
 # Local Coding Tools MCP
 
-**v0.11.2** — MCP stdio server: **coding + image editing** cho Cursor / VS Code.
+**v0.14.0** — MCP stdio server: **coding + image editing + UI/UX design** cho Cursor / VS Code.
 
-**61 tools** | npm publish ready | winget template included
+**75 tools** | npm publish ready | winget template included
+
+## UI design tools (v0.14.0)
+
+| Nhóm | Tools |
+|------|-------|
+| Screenshot / preview | `capture_screenshot`, `preview_html`, `compare_images` |
+| A11y / responsive | `audit_accessibility`, `audit_responsive`, `page_audit` |
+| Design tokens | `extract_design_tokens`, `generate_palette`, `analyze_typography` |
+| DEV GOL | `read_devgol_guide`, `suggest_ui_pattern`, `score_ui_devgol` |
+| Components / icons | `list_ui_components`, `fetch_icon_svg` |
+
+Hybrid engine: Chrome/Edge hệ thống (CDP) mặc định; Playwright+axe optional (`npm run verify:ui-design-full`). Xem **[docs/HUONG-DAN-UI-DESIGN.md](docs/HUONG-DAN-UI-DESIGN.md)**.
 
 ## Context compression (v0.11.0)
 

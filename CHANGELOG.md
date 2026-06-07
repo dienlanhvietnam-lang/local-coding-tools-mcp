@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.14.0 — UI/UX design tools (61 → 75 tools)
+
+14 tools for visual UI/UX design loop + DEV GOL integration.
+
+- **Visual:** `capture_screenshot`, `preview_html`, `compare_images`
+- **Quality:** `audit_accessibility` (lite CDP / full Playwright+axe), `audit_responsive`, `page_audit`
+- **Design system:** `extract_design_tokens`, `generate_palette`, `analyze_typography`, `list_ui_components`
+- **DEV GOL:** `read_devgol_guide`, `suggest_ui_pattern`, `score_ui_devgol`
+- **Assets:** `fetch_icon_svg`
+- **Infra:** `browserResolve`, `browserCdp` (hybrid Chrome/Edge CDP), `urlGuard`, profile `ui-design-core` / `ui-design-full`
+- **Agent:** UI_DESIGN_LOOP policy (extension dmctn-mcp v0.5.2, POLICY_VERSION 4)
+- Docs: [UI-DESIGN-TOOLS.md](docs/UI-DESIGN-TOOLS.md), [HUONG-DAN-UI-DESIGN.md](docs/HUONG-DAN-UI-DESIGN.md)
+
 ## v0.11.2 — Customer ZIP fix
 
 - **Customer ZIP:** thêm `scripts/expected-tools.mjs` và `hard-test-all-tools.mjs` (fix `pilot-stdio.mjs` ERR_MODULE_NOT_FOUND khi Kiểm tra MCP).

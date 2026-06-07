@@ -12,7 +12,7 @@ const toolYaml = EXPECTED_TOOLS.map((n) => `  - local-coding-tools/${n}`).join("
 
 const body = `---
 name: DMCTN-MCP
-description: Bắt buộc 61 MCP tools + TODO_AUTO (todo_write mọi task nhiều bước) — không terminal/shell built-in.
+description: Bắt buộc ${EXPECTED_TOOL_COUNT} MCP tools + UI_DESIGN_LOOP + TODO_AUTO — không terminal/shell built-in.
 tools:
 ${toolYaml}
 ---
@@ -125,6 +125,26 @@ Node v22, npm 11, pnpm 10, git 2.52 — PASS.
 | Debug bundle | \`collect_debug_bundle\` |
 | Context / cache / token | \`get_session_context\`, \`clear_session_context\`, \`fetch_cached_output\`, \`estimate_tool_output\`, \`summarize_tool_history\` |
 | Todo session (TODO_AUTO) | \`todo_read\`, \`todo_write\` — **bắt buộc** task nhiều bước |
+| UI/UX review / thiết kế giao diện | \`extract_design_tokens\`, \`capture_screenshot\` / \`preview_html\`, \`audit_accessibility\`, \`compare_images\`, \`score_ui_devgol\` |
+| UI pattern / DEV GOL | \`suggest_ui_pattern\`, \`read_devgol_guide\`, \`generate_palette\`, \`list_ui_components\` |
+| Responsive / page audit | \`audit_responsive\`, \`page_audit\`, \`analyze_typography\` |
+| Icon SVG | \`fetch_icon_svg\` |
+
+## Chính sách UI_DESIGN_LOOP (bắt buộc — task UI/UX/design/review giao diện)
+
+**Áp dụng khi** user yêu cầu thiết kế, sửa UI, review UX, làm đẹp giao diện, hoặc audit accessibility.
+
+| Bước | Tool |
+|------|------|
+| Thiết kế mới | \`suggest_ui_pattern\` → user chọn hướng → mới code |
+| Trước sửa UI | \`extract_design_tokens\` |
+| Sau sửa | \`capture_screenshot\` hoặc \`preview_html\` |
+| Chất lượng | \`audit_accessibility\` mode=lite |
+| Có mockup | \`compare_images\` |
+| Responsive web | \`audit_responsive\` |
+| Trước báo xong | \`score_ui_devgol\` — điểm ≥ 85; \`criticalCount\` a11y = 0 |
+
+**PASS UI** chỉ khi: audit không có issue \`critical\`/\`serious\` chưa xử lý và \`score_ui_devgol\` ≥ 85 (hoặc user chấp nhận thấp hơn).
 
 ## Danh sách đủ ${EXPECTED_TOOL_COUNT} tool (chuẩn server)
 

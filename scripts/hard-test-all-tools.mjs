@@ -292,6 +292,56 @@ async function runHardTests(client, box) {
     workspacePath: box, runScript: true, collectBundle: true,
   })));
 
+  const uiHtml = path.join(SERVER_ROOT, "tests", "fixtures", "ui", "sample.html");
+  const uiRel = "fixtures/ui/sample.html";
+  await callToolSafe(client, "write_workspace_file", {
+    workspacePath: box,
+    relativePath: uiRel,
+    content: fs.readFileSync(uiHtml, "utf8"),
+  });
+  record(results, "extract_design_tokens", parseResult(await callToolSafe(client, "extract_design_tokens", {
+    workspacePath: box, sources: ["**/*.css"],
+  })));
+  record(results, "generate_palette", parseResult(await callToolSafe(client, "generate_palette", {
+    workspacePath: box, seedColor: "#2563eb",
+  })));
+  record(results, "suggest_ui_pattern", parseResult(await callToolSafe(client, "suggest_ui_pattern", {
+    workspacePath: box, productType: "saas",
+  })));
+  record(results, "read_devgol_guide", parseResult(await callToolSafe(client, "read_devgol_guide", {
+    workspacePath: box, topic: "scorecard",
+  })));
+  record(results, "list_ui_components", parseResult(await callToolSafe(client, "list_ui_components", {
+    workspacePath: box,
+  })));
+  record(results, "analyze_typography", parseResult(await callToolSafe(client, "analyze_typography", {
+    workspacePath: box,
+  })));
+  record(results, "preview_html", parseResult(await callToolSafe(client, "preview_html", {
+    workspacePath: box, relativePath: uiRel, outputRelativePath: ".mcp-debug/hard-preview.png",
+  })));
+  record(results, "audit_accessibility", parseResult(await callToolSafe(client, "audit_accessibility", {
+    workspacePath: box, relativePath: uiRel, mode: "lite",
+  })));
+  record(results, "compare_images", parseResult(await callToolSafe(client, "compare_images", {
+    workspacePath: box, referenceRelativePath: "assets/source.png", actualRelativePath: "assets/source.png",
+  })));
+  record(results, "score_ui_devgol", parseResult(await callToolSafe(client, "score_ui_devgol", {
+    workspacePath: box, relativePath: uiRel,
+  })));
+  record(results, "capture_screenshot", parseResult(await callToolSafe(client, "capture_screenshot", {
+    workspacePath: box, relativePath: uiRel,
+  })));
+  record(results, "audit_responsive", parseResult(await callToolSafe(client, "audit_responsive", {
+    workspacePath: box, url: "http://127.0.0.1:1", breakpoints: [375],
+  })));
+  record(results, "page_audit", parseResult(await callToolSafe(client, "page_audit", {
+    workspacePath: box, url: "http://127.0.0.1:1", mode: "lite",
+  })));
+  record(results, "fetch_icon_svg", parseResult(await callToolSafe(client, "fetch_icon_svg", {
+    workspacePath: box, library: "lucide", iconName: "check",
+  })));
+
   // Last: optional nobg may crash native deps on some Windows hosts — isolate after core tools.
   const nobg = parseResult(await callToolSafe(client, "image_remove_background", {
     workspacePath: box, inputPath: imgIn, outputPath: "assets/nobg.png", timeoutMs: 180000,

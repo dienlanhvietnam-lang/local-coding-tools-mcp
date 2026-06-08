@@ -4,7 +4,10 @@ import { PROJECT_ROOT } from "../config.js";
 
 export const RUNTIME_LOG_PATH = resolveRuntimeLogPath();
 
-function resolveRuntimeLogPath(): string {
+function resolveRuntimeLogPath(workspacePath?: string): string {
+  if (workspacePath) {
+    return path.join(path.resolve(workspacePath), ".dmctn", "runtime", "mcp-powershell-runner.log");
+  }
   const parent = path.resolve(PROJECT_ROOT, "..");
   const parentVscode = path.join(parent, ".vscode", "mcp.json");
   const workspaceRoot = fs.existsSync(parentVscode) ? parent : PROJECT_ROOT;
@@ -40,16 +43,17 @@ export interface RuntimeLogEvent {
   error?: string;
 }
 
-function ensureLogDir(): void {
-  const dir = path.dirname(RUNTIME_LOG_PATH);
+function ensureLogDir(logPath: string): void {
+  const dir = path.dirname(logPath);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
 }
 
-export function logRuntimeEvent(event: RuntimeLogEvent): void {
+export function logRuntimeEvent(event: RuntimeLogEvent, workspacePath?: string): void {
   try {
-    ensureLogDir();
+    const logPath = resolveRuntimeLogPath(workspacePath);
+    ensureLogDir(logPath);
     const line = {
       time: new Date().toISOString(),
       ...event,
@@ -59,7 +63,7 @@ export function logRuntimeEvent(event: RuntimeLogEvent): void {
       command: event.command ? sanitizeLogText(event.command) : undefined,
       error: event.error ? sanitizeLogText(event.error) : undefined,
     };
-    fs.appendFileSync(RUNTIME_LOG_PATH, JSON.stringify(line) + "\n", "utf8");
+    fs.appendFileSync(logPath, JSON.stringify(line) + "\n", "utf8");
   } catch {
     // logging must never crash callers
   }

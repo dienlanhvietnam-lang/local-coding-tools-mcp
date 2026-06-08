@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { MAX_OUTPUT_CHARS } from "../config.js";
+import { getMaxOutputChars } from "../config.js";
 import { logRuntimeEvent, tailText } from "./runtimeLog.js";
 import { truncateStructured } from "./truncateStructured.js";
 
@@ -61,6 +61,10 @@ export interface ExecResult {
   stderr: string;
   truncated: boolean;
   hint?: string;
+  /** Full stdout before truncation — present only when truncated. */
+  fullStdout?: string;
+  /** Full stderr before truncation — present only when truncated. */
+  fullStderr?: string;
 }
 
 export interface ExecOptions {
@@ -133,20 +137,23 @@ export function runCommand(
   const cwd = options.cwd ? path.resolve(options.cwd) : process.cwd();
 
   const timeoutMs = options.timeoutMs ?? 120_000;
-  const maxOutputChars = options.maxOutputChars ?? MAX_OUTPUT_CHARS;
+  const maxOutputChars = options.maxOutputChars ?? getMaxOutputChars();
   const startTime = Date.now();
   const startIso = new Date(startTime).toISOString();
   const target = resolveSpawnTarget(command, args);
 
-  logRuntimeEvent({
-    kind: "spawn_start",
-    command: target.executable,
-    args: target.args,
-    cwd,
-    shell: "false",
-    startTime: startIso,
-    timeoutMs,
-  });
+  logRuntimeEvent(
+    {
+      kind: "spawn_start",
+      command: target.executable,
+      args: target.args,
+      cwd,
+      shell: "false",
+      startTime: startIso,
+      timeoutMs,
+    },
+    options.workspacePath
+  );
 
   return new Promise((resolve) => {
     const child = spawn(target.executable, target.args, {
@@ -184,23 +191,27 @@ export function runCommand(
         : exitCode === 0
           ? "PASS"
           : "FAIL";
-      logRuntimeEvent({
-        kind: timedOut ? "spawn_timeout" : status === "PASS" ? "spawn_pass" : "spawn_fail",
-        command: target.executable,
-        args: target.args,
-        cwd,
-        shell: "false",
-        startTime: startIso,
-        endTime: new Date().toISOString(),
-        durationMs,
-        exitCode,
-        signal,
-        status,
-        stdoutTail: stdout,
-        stderrTail: stderr,
-        timeoutMs,
-        cancelReason: timedOut ? `timeout after ${timeoutMs}ms` : undefined,
-      });
+      logRuntimeEvent(
+        {
+          kind: timedOut ? "spawn_timeout" : status === "PASS" ? "spawn_pass" : "spawn_fail",
+          command: target.executable,
+          args: target.args,
+          cwd,
+          shell: "false",
+          startTime: startIso,
+          endTime: new Date().toISOString(),
+          durationMs,
+          exitCode,
+          signal,
+          status,
+          stdoutTail: stdout,
+          stderrTail: stderr,
+          timeoutMs,
+          cancelReason: timedOut ? `timeout after ${timeoutMs}ms` : undefined,
+        },
+        options.workspacePath
+      );
+      const truncated = out.truncated || err.truncated;
       resolve({
         status,
         command,
@@ -209,28 +220,34 @@ export function runCommand(
         durationMs,
         stdout: out.text,
         stderr: err.text,
-        truncated: out.truncated || err.truncated,
-        hint: out.hint ?? err.hint,
+        truncated,
+        hint: truncated
+          ? `${out.hint ?? err.hint ?? ""} Use read_command_output (source=last) to read full stdout/stderr.`.trim()
+          : undefined,
+        ...(truncated ? { fullStdout: stdout, fullStderr: stderr } : {}),
       });
     });
 
     child.on("error", (err) => {
       clearTimeout(timer);
       const durationMs = Date.now() - startTime;
-      logRuntimeEvent({
-        kind: "spawn_error",
-        command: target.executable,
-        args: target.args,
-        cwd,
-        shell: "false",
-        startTime: startIso,
-        endTime: new Date().toISOString(),
-        durationMs,
-        status: "FAIL",
-        error: err.message,
-        stdoutTail: tailText(stdout),
-        stderrTail: tailText(stderr),
-      });
+      logRuntimeEvent(
+        {
+          kind: "spawn_error",
+          command: target.executable,
+          args: target.args,
+          cwd,
+          shell: "false",
+          startTime: startIso,
+          endTime: new Date().toISOString(),
+          durationMs,
+          status: "FAIL",
+          error: err.message,
+          stdoutTail: tailText(stdout),
+          stderrTail: tailText(stderr),
+        },
+        options.workspacePath
+      );
       resolve({
         status: "FAIL",
         command,
@@ -256,6 +273,7 @@ export async function runPackageScript(
   const result = await runCommand(packageManager, ["run", scriptName], {
     cwd,
     timeoutMs,
+    workspacePath,
   });
   return { ...result, workspacePath: cwd };
 }

@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.18.0 — Command output readback (86 → 87 tools)
+
+- New tool `read_command_output` — read full test/build logs when `run_project_script` output is truncated
+- `run_project_script` / `run_safe_command` save full stdout/stderr to `.mcp-debug/command-output/` (+ optional cacheId)
+- Runtime log now writes to workspace `.dmctn/runtime/mcp-powershell-runner.log`
+- `getMaxOutputChars()` reads `MCP_MAX_OUTPUT_CHARS` at runtime
+
 ## v0.17.0 — VSIX Publisher tools (82 → 86 tools)
 
 - `vsix_check_marketplace`, `vsix_package`, `vsix_publish_marketplace`, `vsix_verify_publish`

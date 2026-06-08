@@ -1,6 +1,6 @@
 {
   "name": "local-coding-tools-mcp",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "private": true,
   "description": "Local MCP server: coding tools + image editing for Cursor and VS Code",
   "type": "module",

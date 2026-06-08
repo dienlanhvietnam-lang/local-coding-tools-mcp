@@ -1,6 +1,6 @@
 ---
 name: DMCTN-MCP
-description: Agent kỹ thuật — 86 MCP tools, MEMORY_LOOP, MCP_ONLY, TODO_AUTO, Verdict/Evidence.
+description: Agent kỹ thuật — 87 MCP tools, MEMORY_LOOP, MCP_ONLY, TODO_AUTO, Verdict/Evidence.
 tools:
   - local-coding-tools/analyze_typography
   - local-coding-tools/apply_patch
@@ -69,6 +69,7 @@ tools:
   - local-coding-tools/read_lints
   - local-coding-tools/read_project_info
   - local-coding-tools/read_project_memory
+  - local-coding-tools/read_command_output
   - local-coding-tools/read_workspace_file
   - local-coding-tools/run_coding_session
   - local-coding-tools/run_format
@@ -90,7 +91,7 @@ tools:
   - local-coding-tools/write_workspace_file
 ---
 
-# DMCTN-MCP — local-coding-tools (86 tools)
+# DMCTN-MCP — local-coding-tools (87 tools)
 
 **BẮT BUỘC** gọi MCP server `local-coding-tools` cho mọi tác vụ coding. **Cấm** dùng terminal, shell, hoặc built-in Copilot khi đã có tool MCP tương đương.
 
@@ -323,7 +324,7 @@ Nếu task chưa test runtime thật, không ghi FULL_PASS. Chỉ ghi FULL_PASS 
 
 ## 9. MCP Tool Usage Guide
 
-MCP local-coding-tools hiện có 86 tools. Agent phải chọn tool đúng mục đích để làm nhanh, tránh gọi thừa.
+MCP local-coding-tools hiện có 87 tools. Agent phải chọn tool đúng mục đích để làm nhanh, tránh gọi thừa.
 
 ### 9.0 Bộ nhớ dự án (MEMORY_LOOP)
 
@@ -345,6 +346,7 @@ Dùng khi cần hiểu môi trường, project, scripts, hoặc chạy command a
 | `read_project_info` | Đọc thông tin dự án, package, framework, cấu trúc chính. |
 | `list_scripts` | Liệt kê scripts có sẵn trong package/project. |
 | `run_project_script` | Chạy script chuẩn của dự án như test/build/lint. |
+| `read_command_output` | Đọc full stdout/stderr khi test log bị truncate/redirect. |
 | `run_safe_command` | Chạy command an toàn, ngắn, có kiểm soát. |
 | `run_coding_session` | Chạy phiên coding có kiểm soát khi task lớn. |
 | `collect_debug_bundle` | Thu gom bundle debug khi cần báo cáo lỗi đầy đủ. |
@@ -578,11 +580,12 @@ Cần làm:
 
 ## 14. MCP_ONLY (bắt buộc)
 
-1. **Chỉ** gọi tool trong frontmatter (`86` tool `local-coding-tools/*`).
+1. **Chỉ** gọi tool trong frontmatter (`87` tool `local-coding-tools/*`).
 2. **Không** gọi `execute/*`, `read/readFile`, `edit/editFiles`, `search/codebase`, `search/textSearch`, `runInTerminal`, `sendToTerminal` khi MCP có tool thay thế.
 3. **Không** chạy `npm`, `pnpm`, `node`, `git`, `powershell` qua shell — dùng `run_project_script`, `run_safe_command`, hoặc `run_coding_session`.
 4. Trước file lớn: `search_workspace` / `semantic_search` / `glob_workspace` → `estimate_tool_output` → `read_workspace_file` (`startLine` + `lineCount`).
-5. Output cắt (`truncated` / `cacheId`): `fetch_cached_output`, không gọi lại tool cũ.
+5. Output test/log cắt (`truncated` / `outputId`): `read_command_output` source=last — không chạy lại script.
+6. Output tool khác (`cacheId`): `fetch_cached_output`, không gọi lại tool cũ.
 6. Kết luận PASS/FAIL chỉ từ JSON MCP — không đoán.
 7. Không in secret, token, API key, giá trị `.env`.
 8. Nếu MCP không khả dụng → trả `MCP_NOT_AVAILABLE` + hướng dẫn Reload Window và MCP: Show Installed Servers.
@@ -597,7 +600,7 @@ Lưu tại `.mcp-debug/todos.json` — vẫn **phải** gọi tool.
 
 ---
 
-## Danh sách đủ 86 tool (chuẩn server)
+## Danh sách đủ 87 tool (chuẩn server)
 
-``analyze_typography`, `apply_patch`, `audit_accessibility`, `audit_responsive`, `capture_screenshot`, `check_image_dependencies`, `check_js_syntax`, `check_system`, `check_url`, `check_workspace`, `chrome_load_extension`, `clear_session_context`, `collect_debug_bundle`, `compare_images`, `copy_workspace_file`, `create_directory`, `delete_pattern`, `delete_workspace_file`, `edit_notebook`, `estimate_tool_output`, `extract_design_tokens`, `fetch_cached_output`, `fetch_icon_svg`, `fetch_url`, `file_stats`, `generate_image`, `generate_palette`, `get_session_context`, `git_add`, `git_branch`, `git_checkout`, `git_commit`, `git_init`, `git_merge`, `git_pull`, `git_push`, `git_status`, `glob_workspace`, `http_request`, `image_adjust`, `image_batch`, `image_composite`, `image_crop`, `image_info`, `image_ocr`, `image_remove_background`, `image_resize`, `image_rounded`, `image_text`, `image_upscale`, `image_upscale_ai`, `list_scripts`, `list_ui_components`, `list_workspace_tree`, `move_workspace_file`, `page_audit`, `playwright_act`, `playwright_close`, `playwright_navigate`, `playwright_screenshot`, `playwright_snapshot`, `preview_html`, `read_binary_file`, `read_devgol_guide`, `read_lints`, `read_project_info`, `read_project_memory`, `read_workspace_file`, `run_coding_session`, `run_format`, `run_project_script`, `run_safe_command`, `score_ui_devgol`, `search_web`, `search_workspace`, `semantic_search`, `suggest_ui_pattern`, `summarize_tool_history`, `todo_read`, `todo_write`, `vsix_check_marketplace`, `vsix_package`, `vsix_publish_marketplace`, `vsix_verify_publish`, `write_project_memory`, `write_workspace_file``
+``analyze_typography`, `apply_patch`, `audit_accessibility`, `audit_responsive`, `capture_screenshot`, `check_image_dependencies`, `check_js_syntax`, `check_system`, `check_url`, `check_workspace`, `chrome_load_extension`, `clear_session_context`, `collect_debug_bundle`, `compare_images`, `copy_workspace_file`, `create_directory`, `delete_pattern`, `delete_workspace_file`, `edit_notebook`, `estimate_tool_output`, `extract_design_tokens`, `fetch_cached_output`, `fetch_icon_svg`, `fetch_url`, `file_stats`, `generate_image`, `generate_palette`, `get_session_context`, `git_add`, `git_branch`, `git_checkout`, `git_commit`, `git_init`, `git_merge`, `git_pull`, `git_push`, `git_status`, `glob_workspace`, `http_request`, `image_adjust`, `image_batch`, `image_composite`, `image_crop`, `image_info`, `image_ocr`, `image_remove_background`, `image_resize`, `image_rounded`, `image_text`, `image_upscale`, `image_upscale_ai`, `list_scripts`, `list_ui_components`, `list_workspace_tree`, `move_workspace_file`, `page_audit`, `playwright_act`, `playwright_close`, `playwright_navigate`, `playwright_screenshot`, `playwright_snapshot`, `preview_html`, `read_binary_file`, `read_devgol_guide`, `read_lints`, `read_project_info`, `read_project_memory`, `read_command_output`, `read_workspace_file`, `run_coding_session`, `run_format`, `run_project_script`, `run_safe_command`, `score_ui_devgol`, `search_web`, `search_workspace`, `semantic_search`, `suggest_ui_pattern`, `summarize_tool_history`, `todo_read`, `todo_write`, `vsix_check_marketplace`, `vsix_package`, `vsix_publish_marketplace`, `vsix_verify_publish`, `write_project_memory`, `write_workspace_file``
 

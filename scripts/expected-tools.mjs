@@ -67,6 +67,7 @@ export const EXPECTED_TOOLS = [
   "read_lints",
   "read_project_info",
   "read_project_memory",
+  "read_command_output",
   "read_workspace_file",
   "run_coding_session",
   "run_format",

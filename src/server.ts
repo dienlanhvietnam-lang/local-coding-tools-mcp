@@ -69,6 +69,7 @@ import { imageUpscale } from "./tools/imageUpscale.js";
 import { imageUpscaleAi } from "./tools/imageUpscaleAi.js";
 import { checkImageDependencies } from "./tools/checkImageDependencies.js";
 import { fetchCachedOutput } from "./tools/fetchCachedOutput.js";
+import { readCommandOutput } from "./tools/readCommandOutput.js";
 import { listCacheEntries, parseCacheId, readCache, CACHE_URI_SCHEME } from "./cache/outputCache.js";
 import { maybeCache } from "./utils/maybeCache.js";
 import { getSessionContext, clearSessionContext } from "./tools/sessionContext.js";
@@ -120,9 +121,10 @@ const server = new McpServer(
       "Context budget rules for local-coding-tools:",
       "1. Run search_workspace or semantic_search BEFORE read_workspace_file.",
       "2. Use read_workspace_file with startLine + lineCount; avoid reading whole files over ~200 lines.",
-      "3. If a result has truncated:true or a cacheId/cacheUri, use fetch_cached_output (or the mcp-cache:// resource) instead of re-running the tool.",
-      "4. Call get_session_context when resuming work to avoid repeating searches/reads.",
-      "5. Call estimate_tool_output before large reads to decide on a line range.",
+      "3. If run_project_script/run_safe_command returns truncated:true or outputId, use read_command_output (source=last) — do NOT re-run the script.",
+      "4. If a result has cacheId/cacheUri from other tools, use fetch_cached_output instead of re-running.",
+      "5. Call get_session_context when resuming work to avoid repeating searches/reads.",
+      "6. Call estimate_tool_output before large reads to decide on a line range.",
     ].join("\n"),
   }
 );
@@ -884,7 +886,7 @@ server.tool(
 
 server.tool(
   "run_project_script",
-  "Run a script that exists in package.json only. Output may be truncated.",
+  "Run a script that exists in package.json only. Truncated output is saved — use read_command_output (source=last) for full test logs.",
   {
     workspacePath: workspacePathSchema,
     script: z.string().describe("Script name from package.json scripts section"),
@@ -894,8 +896,12 @@ server.tool(
   EXECUTE,
   async ({ workspacePath, script, projectSubdir, timeoutMs }) =>
     jsonText(
-      await withToolLogging("run_project_script", { workspacePath, riskLevel: "medium" }, () =>
-        runProjectScript({ workspacePath, script, projectSubdir, timeoutMs })
+      maybeCache(
+        workspacePath,
+        "run_project_script",
+        await withToolLogging("run_project_script", { workspacePath, riskLevel: "medium" }, () =>
+          runProjectScript({ workspacePath, script, projectSubdir, timeoutMs })
+        )
       )
     )
 );
@@ -1293,6 +1299,32 @@ server.tool(
     jsonText(
       await withToolLogging("image_upscale_ai", { workspacePath: args.workspacePath, riskLevel: "high" }, () =>
         imageUpscaleAi(args)
+      )
+    )
+);
+
+server.tool(
+  "read_command_output",
+  "Read full stdout/stderr from a prior run_project_script or run_safe_command. Use when truncated:true or test logs were redirected. Supports line ranges and runtime log tail.",
+  {
+    workspacePath: workspacePathSchema,
+    source: z
+      .enum(["last", "output", "runtime", "cache"])
+      .optional()
+      .describe("last=latest saved command (default), output=by outputId, runtime=.dmctn/runtime log, cache=by cacheId"),
+    outputId: z.string().optional().describe("UUID from run_project_script outputId"),
+    cacheId: z.string().optional().describe("cacheId when source=cache"),
+    stream: z.enum(["stdout", "stderr", "both"]).optional().describe("Which stream to read (default both)"),
+    startLine: z.number().optional().describe("1-based start line for paging"),
+    lineCount: z.number().optional().describe("Max lines to return (cap 200)"),
+    tailLines: z.number().optional().describe("Return only last N lines (runtime log or output)"),
+    maxChars: z.number().optional().describe("Max characters to return"),
+  },
+  READ_ONLY,
+  async (args) =>
+    jsonText(
+      await withToolLogging("read_command_output", { workspacePath: args.workspacePath, riskLevel: "low" }, () =>
+        readCommandOutput(args)
       )
     )
 );

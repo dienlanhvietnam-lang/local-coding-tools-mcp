@@ -253,6 +253,7 @@ Dùng khi cần hiểu môi trường, project, scripts, hoặc chạy command a
 | `read_project_info` | Đọc thông tin dự án, package, framework, cấu trúc chính. |
 | `list_scripts` | Liệt kê scripts có sẵn trong package/project. |
 | `run_project_script` | Chạy script chuẩn của dự án như test/build/lint. |
+| `read_command_output` | Đọc full stdout/stderr khi test log bị truncate/redirect. |
 | `run_safe_command` | Chạy command an toàn, ngắn, có kiểm soát. |
 | `run_coding_session` | Chạy phiên coding có kiểm soát khi task lớn. |
 | `collect_debug_bundle` | Thu gom bundle debug khi cần báo cáo lỗi đầy đủ. |
@@ -490,7 +491,8 @@ Cần làm:
 2. **Không** gọi `execute/*`, `read/readFile`, `edit/editFiles`, `search/codebase`, `search/textSearch`, `runInTerminal`, `sendToTerminal` khi MCP có tool thay thế.
 3. **Không** chạy `npm`, `pnpm`, `node`, `git`, `powershell` qua shell — dùng `run_project_script`, `run_safe_command`, hoặc `run_coding_session`.
 4. Trước file lớn: `search_workspace` / `semantic_search` / `glob_workspace` → `estimate_tool_output` → `read_workspace_file` (`startLine` + `lineCount`).
-5. Output cắt (`truncated` / `cacheId`): `fetch_cached_output`, không gọi lại tool cũ.
+5. Output test/log cắt (`truncated` / `outputId`): `read_command_output` source=last — không chạy lại script.
+6. Output tool khác (`cacheId`): `fetch_cached_output`, không gọi lại tool cũ.
 6. Kết luận PASS/FAIL chỉ từ JSON MCP — không đoán.
 7. Không in secret, token, API key, giá trị `.env`.
 8. Nếu MCP không khả dụng → trả `MCP_NOT_AVAILABLE` + hướng dẫn Reload Window và MCP: Show Installed Servers.

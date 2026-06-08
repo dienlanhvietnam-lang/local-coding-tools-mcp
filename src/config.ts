@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const SERVER_NAME = "local-coding-tools-mcp";
-export const SERVER_VERSION = "0.17.0";
+export const SERVER_VERSION = "0.18.0";
 
 /** Max image file size for read/process (50 MB) */
 export const MAX_IMAGE_BYTES = 50 * 1024 * 1024;
@@ -33,6 +33,11 @@ function envInt(name: string, fallback: number): number {
 
 /** Max characters returned by a single tool before truncation kicks in. */
 export const MAX_OUTPUT_CHARS = envInt("MCP_MAX_OUTPUT_CHARS", 20_000);
+
+/** Runtime read so tests and env changes apply without restart. */
+export function getMaxOutputChars(): number {
+  return envInt("MCP_MAX_OUTPUT_CHARS", 20_000);
+}
 
 /** Default number of lines returned by line-range reads. */
 export const READ_DEFAULT_LINES = envInt("MCP_READ_DEFAULT_LINES", 80);

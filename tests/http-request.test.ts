@@ -18,7 +18,7 @@ describe("http_request", () => {
 
   it("uses unified User-Agent version", () => {
     expect(httpUserAgent()).toContain(SERVER_VERSION);
-    expect(SERVER_VERSION).toBe("0.17.0");
+    expect(SERVER_VERSION).toBe("0.18.0");
   });
 
   it("POST to httpbin echoes body", async () => {

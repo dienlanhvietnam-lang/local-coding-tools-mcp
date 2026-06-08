@@ -115,8 +115,8 @@ for (const rel of required) {
   }
 }
 
-if (pkg.version !== "0.17.0") {
-  console.error(`✗ expected version 0.17.0, got ${pkg.version}`);
+if (pkg.version !== "0.18.0") {
+  console.error(`✗ expected version 0.18.0, got ${pkg.version}`);
   ok = false;
 } else {
   console.log(`✓ package.json version ${pkg.version}`);
@@ -254,5 +254,5 @@ if (!ok) {
 }
 const label = isCustomerPack
   ? "Verify PASSED (customer pack)"
-  : "Verify PASSED (v0.17.0 VSIX publisher tools)";
+  : "Verify PASSED (v0.18.0 command output readback)";
 console.log(`\n${label}`);

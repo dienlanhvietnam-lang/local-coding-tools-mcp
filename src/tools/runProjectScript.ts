@@ -9,6 +9,7 @@ import { getScriptCommand } from "./listScripts.js";
 import { assertWithinWorkspace } from "../safety/pathGuard.js";
 import { pass, fail } from "../utils/result.js";
 import { writeFileInWorkspace } from "../utils/fsSafe.js";
+import { saveCommandOutput } from "../utils/commandOutputStore.js";
 
 export interface RunProjectScriptInput {
   workspacePath: string;
@@ -29,6 +30,10 @@ export interface RunProjectScriptOutput {
   truncated?: boolean;
   hint?: string;
   error?: string;
+  outputId?: string;
+  outputPath?: string;
+  cacheId?: string;
+  cacheUri?: string;
 }
 
 export async function runProjectScript(
@@ -61,6 +66,32 @@ export async function runProjectScript(
   const result = await runPackageScript(packageDir, scriptName, timeoutMs, pm);
 
   const timedOut = result.status === "TIMEOUT";
+  const fullStdout = result.fullStdout ?? result.stdout;
+  const fullStderr = result.fullStderr ?? result.stderr;
+  const shouldPersist =
+    result.truncated || fullStdout.length + fullStderr.length > 4_000;
+
+  let saved:
+    | ReturnType<typeof saveCommandOutput>
+    | undefined;
+  if (shouldPersist) {
+    try {
+      saved = saveCommandOutput({
+        workspacePath,
+        tool: "run_project_script",
+        script: scriptName,
+        projectSubdir,
+        exitCode: result.exitCode,
+        timedOut,
+        truncated: result.truncated,
+        stdout: fullStdout,
+        stderr: fullStderr,
+      });
+    } catch {
+      // non-fatal
+    }
+  }
+
   const output: RunProjectScriptOutput = {
     status: result.status === "PASS" ? "PASS" : "FAIL",
     workspacePath,
@@ -72,6 +103,17 @@ export async function runProjectScript(
     timedOut,
     truncated: result.truncated,
     ...(result.hint ? { hint: result.hint } : {}),
+    ...(saved
+      ? {
+          outputId: saved.id,
+          outputPath: saved.relativePath,
+          cacheId: saved.cacheId,
+          cacheUri: saved.cacheUri,
+          hint:
+            (result.hint ? `${result.hint} ` : "") +
+            `Full output saved — read_command_output source=last or outputId=${saved.id}.`,
+        }
+      : {}),
   };
 
   if (timedOut) {
@@ -89,6 +131,9 @@ export async function runProjectScript(
           exitCode: result.exitCode,
           timedOut,
           truncated: result.truncated,
+          outputId: saved?.id,
+          outputPath: saved?.relativePath,
+          cacheId: saved?.cacheId,
           recordedAt: new Date().toISOString(),
         },
         null,

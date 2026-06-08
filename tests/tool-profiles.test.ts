@@ -11,8 +11,8 @@ import {
 } from "../src/toolProfiles.js";
 
 describe("tool profiles VSIX placement", () => {
-  it("EXPECTED_TOOL_COUNT is 86", () => {
-    expect(EXPECTED_TOOL_COUNT).toBe(86);
+  it("EXPECTED_TOOL_COUNT is 87", () => {
+    expect(EXPECTED_TOOL_COUNT).toBe(87);
   });
 
   it("safe profile excludes all VSIX tools", () => {
@@ -20,7 +20,7 @@ describe("tool profiles VSIX placement", () => {
       expect(profileIncludesTool("safe", t)).toBe(false);
       expect(SAFE_PROFILE_TOOLS).not.toContain(t);
     }
-    expect(SAFE_PROFILE_TOOLS.length).toBe(86 - VSIX_TOOLS.length);
+    expect(SAFE_PROFILE_TOOLS.length).toBe(87 - VSIX_TOOLS.length);
   });
 
   it("dev profile includes check/package/verify but not publish", () => {
@@ -34,7 +34,7 @@ describe("tool profiles VSIX placement", () => {
 
   it("admin profile includes publish", () => {
     expect(profileIncludesTool("admin", VSIX_PUBLISH_TOOL)).toBe(true);
-    expect(ADMIN_PROFILE_TOOLS.length).toBe(86);
+    expect(ADMIN_PROFILE_TOOLS.length).toBe(87);
     for (const t of VSIX_TOOLS) {
       expect(ADMIN_PROFILE_TOOLS).toContain(t);
     }

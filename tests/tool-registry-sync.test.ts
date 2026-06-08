@@ -6,6 +6,6 @@ describe("tool registry sync", () => {
   it("toolRegistry.ts matches expected-tools.mjs", () => {
     expect([...EXPECTED_TOOLS]).toEqual([...MJS_TOOLS]);
     expect(EXPECTED_TOOL_COUNT).toBe(MJS_COUNT);
-    expect(EXPECTED_TOOL_COUNT).toBe(86);
+    expect(EXPECTED_TOOL_COUNT).toBe(87);
   });
 });

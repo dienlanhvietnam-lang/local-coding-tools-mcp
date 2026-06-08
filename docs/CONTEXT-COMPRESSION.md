@@ -23,6 +23,7 @@ MCP chỉ kiểm soát **output từng tool** và **state phiên local** — kh�
 | Context Bank (state phiên) | `contextBank` session + `get_session_context` / `clear_session_context` |
 | `PromptTokenBreakdown` | `estimate_tool_output`, `tokenEstimate` |
 | `ConversationSummary` | `summarize_tool_history` |
+| Command log readback | `read_command_output` (saved stdout/stderr + runtime log tail) |
 | context-stripping | `stripContextBlocks` (tùy chọn `stripContext` trong `read_workspace_file`) |
 
 ## Workflow khuyến nghị
@@ -33,6 +34,7 @@ flowchart TD
     B --> C{Result has readHint}
     C --> D[read_workspace_file startLine + lineCount]
     D --> E{truncated or cacheId}
+    E -->|"outputId truncated"| F2[read_command_output]
     E -->|"cacheId"| F[fetch_cached_output]
     E -->|"no"| G[Use content]
     H[Resuming work] --> I[get_session_context]
